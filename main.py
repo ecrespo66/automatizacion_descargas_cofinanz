@@ -10,6 +10,7 @@ if __name__ == "__main__":
         robot = Robot(**kwargs)
         RobotFlow.run_robot(robot)
     except Exception as e:
+
         raise Exception(e)
 
 

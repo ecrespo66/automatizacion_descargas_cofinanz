@@ -11,8 +11,8 @@ class BusinessException(RobotException):
         next_action:  Next action when the exception is raised.
     """
 
-    def __init__(self, *args, **kwargs):
-        super.__init__(*args, **kwargs)
+    def __init__(self, robot, **kwargs):
+        super().__init__(robot, **kwargs)
 
     def process_exception(self):
         """
@@ -22,7 +22,7 @@ class BusinessException(RobotException):
         :return: None
         """
         # send log to robot manager console.
-        self.robot.Log.business_exception(self.message)
+        #self.robot.Log.business_exception(self.message)
         # Process exception
         if self.next_action == "retry":
             self.retry(3)
@@ -48,7 +48,7 @@ class SystemException(RobotException):
         next_action:  Next action when the exception is raised.
     """
     def __init__(self, *args, **kwargs):
-        super.__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def process_exception(self):
         """Overwrite the process_exception method from RobotException class.

@@ -1,1 +1,5 @@
 ibott-robot-manager
+ibott-browser-manager
+pandas
+openpyxl
+

@@ -55,7 +55,7 @@ class SystemException(RobotException):
         Write action when a Business exception occurs
         :param: None
         :return: None"""
-        self.robot.Log.system_exception(self.message)
+        #self.robot.Log.system_exception(self.message)
         # send log to robot manager console.
         # Process exception
         if self.next_action == "retry":

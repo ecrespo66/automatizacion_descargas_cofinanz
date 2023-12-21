@@ -63,7 +63,7 @@ class Robot(Bot):
 
         time.sleep(5)
         pyautogui.press("enter")
-        time.sleep(1)
+        time.sleep(10)
 
         self.data = pd.read_excel("Z:\CLIENTES Y MAILS.xlsx")
 
@@ -99,16 +99,20 @@ class Robot(Bot):
         item = args[0]
         nif = item[0]
 
+        try:
+            input_selector = "//input[@id='form1:inputSelectPoderdante_input']"
 
-        input_selector = "//input[@id='form1:inputSelectPoderdante_input']"
-        time.sleep(10)
-        self.browser.wait_for_element('xpath', input_selector,30)
-        self.browser.find_element("xpath", input_selector).click()
-        self.browser.find_element("xpath", input_selector).clear()
-        time.sleep(1)
-        self.browser.find_element("xpath",input_selector).send_keys(nif)
-        #self.browser.wait_for_element('xpath', f"//*[contains(text(),'{nif}')]")
-        time.sleep(3)
+            self.browser.wait_for_element('xpath', input_selector,30)
+            self.browser.find_element("xpath", input_selector).click()
+            self.browser.find_element("xpath", input_selector).clear()
+            time.sleep(1)
+            self.browser.find_element("xpath",input_selector).send_keys(nif)
+            #self.browser.wait_for_element('xpath', f"//*[contains(text(),'{nif}')]")
+            time.sleep(3)
+        except Exception as e:
+            raise SystemException(self, message=e, next_action="skip")
+
+
         if self.browser.element_exists("xpath", f"//*[contains(text(),'{nif}')]"):
             self.browser.find_element("xpath", f"//*[contains(text(),'{nif}')]").click()
             self.browser.wait_for_element_to_disappear("xpath", "//*[contains(text(),'Cargando...')]", timeout=30)
@@ -122,18 +126,21 @@ class Robot(Bot):
         end_date = f"{last_day_of_month(prev_month.year, prev_month.month)}/{prev_month.month}/{prev_month.year}"
         #Filtrar expedientes por fecha
 
-        self.browser.wait_for_element_to_be_clickable("xpath", "//*[contains(text(),'Cambiar búsqueda')]", 30)
-        time.sleep(5)
-        self.browser.find_element('xpath', "//*[contains(text(),'Cambiar búsqueda')]").click()
 
-        self.browser.wait_for_element("xpath","//input[@id='form1:fechaAperturaExpedienteDesde_input']", 30)
-        time.sleep(3)
-        self.browser.find_element("xpath", "//input[@id='form1:fechaAperturaExpedienteDesde_input']").send_keys(start_date)
+        try:
+            self.browser.wait_for_element_to_be_clickable("xpath", "//*[contains(text(),'Cambiar búsqueda')]", 30)
+            time.sleep(5)
+            self.browser.find_element('xpath', "//*[contains(text(),'Cambiar búsqueda')]").click()
 
-        self.browser.find_element("xpath", "//input[@id='form1:fechaAperturaExpedienteHasta_input']").send_keys(end_date)
-        self.browser.find_element("xpath", "//button[@id='form1:botonBuscar']").click()
+            self.browser.wait_for_element("xpath","//input[@id='form1:fechaAperturaExpedienteDesde_input']", 30)
+            time.sleep(3)
+            self.browser.find_element("xpath", "//input[@id='form1:fechaAperturaExpedienteDesde_input']").send_keys(start_date)
 
-        self.browser.wait_for_element("xpath", "//*[contains(text(),'Trámites')]", 30)
+            self.browser.find_element("xpath", "//input[@id='form1:fechaAperturaExpedienteHasta_input']").send_keys(end_date)
+            self.browser.find_element("xpath", "//button[@id='form1:botonBuscar']").click()
+        except Exception as e:
+            raise SystemException(self, message=e, next_action="skip")
+
         time.sleep(3)
         #Si no encuentra el botón de trámite pasa al siguiente
         if not self.browser.element_exists('xpath', "//*[contains(text(),'Trámites')]"):
@@ -152,7 +159,7 @@ class Robot(Bot):
 
         self.browser.find_elements('xpath', "//a[contains(@id,'form1:pestanias:j_idt')]")[3].click()
         time.sleep(3)
-
+        self.browser.find_element('xpath', "//*[contains(text(),'Volver')]").click()
         #TODO lógica de guardado de ficheros
 
 
@@ -166,7 +173,6 @@ class Robot(Bot):
         if not nif in pdf_text:
             raise BusinessException(self, message="El documento no corresponde al cliente", next_action="skip")
 
-
         #Buscamos el tipo
         if "sustitutiva" in pdf_text:
             tipo = "sustitutiva"
@@ -177,7 +183,7 @@ class Robot(Bot):
 
 
 
-        self.browser.find_element('xpath', "//*[contains(text(),'Volver')]").click()
+
         # Remove Processed Item
         self.data = self.data.drop(0)
         self.data.reset_index(drop=True, inplace=True)

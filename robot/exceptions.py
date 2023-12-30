@@ -1,3 +1,5 @@
+import time
+
 from robot_manager.exceptions import RobotException
 
 
@@ -22,20 +24,23 @@ class BusinessException(RobotException):
         :return: None
         """
         # send log to robot manager console.
-        #self.robot.Log.business_exception(self.message)
+
         # Process exception
         if self.next_action == "retry":
-            self.retry(3)
+            self.retry(5)
         elif self.next_action == "restart":
             self.restart(3)
-        elif self.next_action == "go_to_node":
-            self.go_to_node("end", 3)
         elif self.next_action == "skip":
+            self.robot.data = self.robot.data.drop(0)
+            self.robot.data.reset_index(drop=True, inplace=True)
             self.skip()
         elif self.next_action == "stop":
             self.stop()
         else:
-            raise Exception("Invalid next_action")
+            try:
+                self.go_to_node(self.next_action, self.message)
+            except:
+                raise Exception("Invalid next_action")
 
 
 class SystemException(RobotException):
@@ -55,19 +60,27 @@ class SystemException(RobotException):
         Write action when a Business exception occurs
         :param: None
         :return: None"""
-        #self.robot.Log.system_exception(self.message)
         # send log to robot manager console.
         # Process exception
+
         if self.next_action == "retry":
-            self.retry(3)
+            try:
+                time.sleep(60)
+                self.retry(3)
+            except Exception as e:
+                self.robot.browser.get("https://ataria.ebizkaia.eus/es/mis-expedientes/")
+                self.robot.data = self.robot.data.drop(0)
+                self.robot.data.reset_index(drop=True, inplace=True)
+                self.go_to_node("set_transaction_status", e)
         elif self.next_action == "restart":
             self.restart(3)
-        elif self.next_action == "go_to_node":
-            self.go_to_node("end", 3)
         elif self.next_action == "skip":
             self.skip()
         elif self.next_action == "stop":
             self.stop()
         else:
-            raise Exception("Invalid next_action")
+            try:
+                self.go_to_node(self.next_action, self.message)
+            except:
+                raise Exception("Invalid next_action")
 

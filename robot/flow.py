@@ -26,8 +26,7 @@ class Nodes(Enum):
     OperationNode = OperationClass
     EndNode = EndClass
     ConditionNode = ConditionClass
-    OnTrue = OnTrueClass
-    OnFalse = OnFalseClass
+
 
 
 class Conditions(Enum):

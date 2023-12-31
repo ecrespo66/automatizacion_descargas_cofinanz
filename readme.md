@@ -24,21 +24,21 @@ flowchart LR
 5-->1
 ```
 # FLOW NODES
-## NODE: start
+## start
  
         En este método se inicializa el robot, se definen las variables globales como rutas de descargas,
         datos de entrada y otras variables que se utilizarán durante el proceso y se inicia sesión en la página web de la agencia tributaria de Vizcaya.
 
         En caso de excepción, este nódo se reintentara 3 veces
         
-## NODE: get_client_data
+## get_client_data
  
         A partir de la variable data (self.data) creada en el método anterior,
         se gestionan las transacciones una a una para procesarla por los siguiente métodos:
             1. Si existen transacciones pendientes de procesar: se llama al método "get_cliente_documents",
             2. En caso contrario termina el proceso método "end"
         
-## NODE: get_client_documents
+## get_client_documents
  
         En este método se busca al cliente y se filtran los expediente del mes correspondiente.
         Recibe como argumento una la información del cliente.
@@ -52,13 +52,13 @@ flowchart LR
                 Cualquier excepcion no controlada -> next_action: "retry"
 
         
-## NODE: process_documents
+## process_documents
  
         Se evalúa si quedan trámites disponibles del cliente para descargar, en caso de que existan,
         Se procederá a llamar al nodo de "download_document.
         En caso contrario, se gestionará la transacción en el nodo "set_transaction_status"
         
-## NODE: download_document
+## download_document
  
         Este método recibe como argumento el trámite que se tiene que procesar.
         Descarga el documento y lee la información de este.
@@ -67,8 +67,8 @@ flowchart LR
             1. Negocio: No hay documentos para descargar -> next_action : "set_transaction_status"
             2. Sistema: No se ha descargadi el documento -> next_action: "rety"
         
-## NODE: set_transaction_status
-## NODE: end
+## set_transaction_status
+## end
  
         Ends the workflow. Closes any open resources like the web browser
         

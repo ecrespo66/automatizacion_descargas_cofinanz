@@ -65,7 +65,7 @@ class SystemException(RobotException):
 
         if self.next_action == "retry":
             try:
-                time.sleep(60)
+                time.sleep(10)
                 self.retry(3)
             except Exception as e:
                 self.robot.browser.get("https://ataria.ebizkaia.eus/es/mis-expedientes/")

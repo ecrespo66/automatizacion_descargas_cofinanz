@@ -36,7 +36,9 @@ class Robot(Bot):
         En este método se inicializa el robot, se definen las variables globales como rutas de descargas,
         datos de entrada y otras variables que se utilizarán durante el proceso y se inicia sesión en la página web de la agencia tributaria de Vizcaya.
 
-        En caso de excepción, este nódo se reintentara 3 veces
+        Excepciones:
+            1. Excepciones de Sistema:
+                1.1 Cualquier excepción -> next_action: "retry"
         """
 
         try:
@@ -178,7 +180,7 @@ class Robot(Bot):
     @RobotFlow(node=Nodes.EndNode)
     def end(self, *args):
         """
-        Ends the workflow. Closes any open resources like the web browser
+        Este método cierra el Navegador web.
         """
         self.browser.close()
         self.log.trace(f"end")

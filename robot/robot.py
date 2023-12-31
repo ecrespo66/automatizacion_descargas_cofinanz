@@ -131,7 +131,12 @@ class Robot(Bot):
     @RobotFlow(Nodes.OperationNode, children="process_documents")
     def download_document(self, *args):
         """
-        Para cada trámite pendiente de gestionar, se procede a la descarga del documento
+        Este método recibe como argumento el trámite que se tiene que procesar.
+        Descarga el documento y lee la información de este.
+
+        Excepciones:
+            1. Negocio: No hay documentos para descargar -> next_action : "set_transaction_status"
+            2. Sistema: No se ha descargadi el documento -> next_action: "rety"
         """
         try:
             tramites = args[0]

@@ -2,6 +2,10 @@ from enum import Enum
 
 
 class AppSelectors(Enum):
+    FECHA_APERTURA = "//*[@id='form1:fechaAperturaExpediente']"
+    TRAMITACION = "//*[text()='Tramitación']"
+    MODELO_TEXTO = "//li[contains(text(), 'Presentación de declaración')]"
+    NOMBRE_IMPUESTO = "//*[@id='form1:labeltituloEs']"
     ACEPTAR_COOKIES = "//*[contains(text(),'Aceptar Todas')]"
     MIS_GESTIONES = "//*[contains(text(),'Mis gestiones')]"
     MIS_EXPEDIENTES =  "//*[contains(text(),'Mis expedientes')]"
@@ -21,8 +25,5 @@ class AppSelectors(Enum):
     NO_RESULTADOS = "//*[contains(text(),'No hay resultados')]"
     BOTON_DESCARGA = "//a[contains(@id,'form1:pestanias:j_idt')]"
     VOLVER = "//*[contains(text(),'Volver')]"
-    @staticmethod
-    def get_client(nif):
-        return f"//*[contains(text(),'{nif}')]"
 
 

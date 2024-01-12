@@ -71,7 +71,7 @@ class SystemException(RobotException):
                 self.robot.browser.get("https://ataria.ebizkaia.eus/es/mis-expedientes/")
                 self.robot.data = self.robot.data.drop(0)
                 self.robot.data.reset_index(drop=True, inplace=True)
-                self.go_to_node("set_transaction_status", e)
+                self.go_to_node("set_transaction_status", "Error al obtener los documentos del cliente")
         elif self.next_action == "restart":
             self.restart(3)
         elif self.next_action == "skip":

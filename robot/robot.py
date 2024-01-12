@@ -2,14 +2,15 @@ from datetime import datetime
 from browser.chrome import ChromeBrowser
 from dateutil.relativedelta import relativedelta
 from files_and_folders.folders import Folder
+from openpyxl.reader.excel import load_workbook
 from robot_manager.base import Bot
 import pandas as pd
+from openpyxl.workbook import Workbook
 
 from robot.app import App
 from .flow import *
 from .exceptions import *
 from .utils import last_day_of_month
-from .selectors import AppSelectors as AS
 
 
 class Robot(Bot):
@@ -51,13 +52,23 @@ class Robot(Bot):
             self.end_date = f"{last_day_of_month(prev_month.year, prev_month.month)}/{prev_month.month}/{prev_month.year}"
 
             self.browser = ChromeBrowser(undetectable=True)
-            self.browser.options.page_load_strategy = 'none'
+            self.browser.options.page_load_strategy = "normal"
+            #self.browser.options.page_load_strategy = 'none'
             self.browser.set_download_folder(self.tempFolder)
             self.app = App(self.browser)
-            self.app.load_certificate()
-            self.browser.options.page_load_strategy = "normal"
+            self.app.login()
+
             self.data = pd.read_excel("Z:\CLIENTES Y MAILS.xlsx")
+            self.workbook_path = 'Z:\Descargas/clientes_impuestos.xlsx'
             self.transaction_number = 0
+
+
+            self.wb = Workbook()
+            page = self.wb.active
+            page.title = 'documentos'
+            page.append(['cif', 'Nombre', 'Impuesto', 'Modelo','Periodo', "Archivo"])  # write the headers to the first line
+            self.wb.save(self.workbook_path)
+
 
         except Exception as e:
             self.browser.close()
@@ -93,23 +104,22 @@ class Robot(Bot):
         """
         try:
             self.nif = args[0][0]
+            self.name = args[0][1]
             self.log.debug(f"se va a procesar el {self.nif}")
             self.transaction_number = self.transaction_number + 1
 
             if self.app.find_client(self.nif) is False:
                 message = f"No se encuentra el usuario {self.nif}"
                 raise BusinessException(self, message=message, next_action="set_transaction_status")
-
+            time.sleep(10)
             tramites = self.app.filter_data(self.start_date, self.end_date)
             if len(tramites) == 0:
                 message = "No hay tramites para el usuario"
-                BusinessException(self, message=message, next_action="set_transaction_status")
+                raise BusinessException(self, message=message, next_action="set_transaction_status")
             return tramites
 
         except BusinessException as BE:
             self.log.business_exception(BE.message)
-            self.data = self.data.drop(0)
-            self.data.reset_index(drop=True, inplace=True)
             raise BE
         except Exception as e:
             self.log.system_exception("Error al obtener los documentos del cliente: Reintentando")
@@ -143,6 +153,7 @@ class Robot(Bot):
         try:
             tramites = args[0]
             tramite = tramites[0]
+            self.folder.empty()
             check_download = self.app.download_document(tramite)
 
             if check_download is not True:
@@ -152,9 +163,12 @@ class Robot(Bot):
             tramites.pop(0)
 
             file = self.folder.file_list()[0]
-            self.app.read_file(file)
-
+            impuesto = self.app.save_file(file, self.name, self.nif)
             self.app.go_back()
+
+            page = self.wb.active
+            page.append([self.nif, self.name, impuesto[0], impuesto[1], impuesto[2], impuesto[3]])
+            self.wb.save(self.workbook_path)
             return tramites
 
         except BusinessException as BE:
@@ -163,17 +177,24 @@ class Robot(Bot):
 
         except Exception as e:
             self.log.system_exception("Error: Se va a reintentar la descarga del documento")
-            self.app.go_back()
+            try:
+                self.app.go_back()
+            except:
+                raise SystemException(self, message=e, next_action="retry")
+
             raise SystemException(self, message=e, next_action="retry")
 
     @RobotFlow(Nodes.OperationNode, children="get_client_data")
     def set_transaction_status(self, *args):
         # Remove Processed Item
         if len(args[0]) > 0:
-            result = args[0]
+            result = args[0][0]
+            page = self.wb.active
+            page.append([self.nif, self.name, "#N/A", "#N/A", "#N/A", result])
+            self.wb.save(self.workbook_path)
         else:
             result = "OK"
-        self.log.trace(result)
+            self.log.trace(result)
         self.data = self.data.drop(0)
         self.data.reset_index(drop=True, inplace=True)
 

@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 from browser.chrome import ChromeBrowser
 from dateutil.relativedelta import relativedelta
@@ -59,7 +60,7 @@ class Robot(Bot):
             self.app.login()
 
             self.data = pd.read_excel("Z:\CLIENTES Y MAILS.xlsx")
-            self.workbook_path = 'Z:\Descargas/clientes_impuestos.xlsx'
+            self.workbook_path = 'Z:\Descargas\clientes_impuestos.xlsx'
             self.transaction_number = 0
 
 
@@ -72,6 +73,7 @@ class Robot(Bot):
 
         except Exception as e:
             self.browser.close()
+            self.log.system_exception(e)
             raise SystemException(self, message=e, next_action="retry")
 
     @RobotFlow(Nodes.ConditionNode, children={True: "get_client_documents", False: "end"},
@@ -153,11 +155,12 @@ class Robot(Bot):
         try:
             tramites = args[0]
             tramite = tramites[0]
-            self.folder.empty()
+
             check_download = self.app.download_document(tramite)
 
             if check_download is not True:
                 raise BusinessException(self, message=check_download, next_action="skip")
+            time.sleep(5)
             if len(self.folder.file_list()) == 0:
                 raise Exception("No se ha descargado el documento")
             tramites.pop(0)
@@ -169,6 +172,7 @@ class Robot(Bot):
             page = self.wb.active
             page.append([self.nif, self.name, impuesto[0], impuesto[1], impuesto[2], impuesto[3]])
             self.wb.save(self.workbook_path)
+            self.folder.empty()
             return tramites
 
         except BusinessException as BE:
@@ -178,6 +182,7 @@ class Robot(Bot):
         except Exception as e:
             self.log.system_exception("Error: Se va a reintentar la descarga del documento")
             try:
+                self.folder.empty()
                 self.app.go_back()
             except:
                 raise SystemException(self, message=e, next_action="retry")

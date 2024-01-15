@@ -134,7 +134,9 @@ class App:
 
         folder_path = f"Z:/Descargas/{nombre}_{nif}/{ejercicio}/IMPUESTOS/{periodo}/"
         Folder(folder_path)
+
         file.move(folder_path)
+
         file.rename(nombre_archivo)
 
         return (impuesto, modelo, periodo, file.path)

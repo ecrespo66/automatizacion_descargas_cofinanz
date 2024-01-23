@@ -7,7 +7,6 @@ from datetime import datetime
 import pyautogui
 from files_and_folders.folders import Folder
 from files_and_folders.pdfs import PDF
-from ibott_cv.screen_activities import Screen
 
 from .selectors import AppSelectors as AS
 
@@ -115,21 +114,18 @@ class App:
 
         pdf = PDF(file.path)
         pdf_text = pdf.read_file()
-        # Validamos el pdf
-        """
-        if not self.nif in pdf_text:
-            file.remove()
-            False
-        """
+
         # Buscamos el tipo
         if "sustitutiva" in pdf_text:
             tipo = "sustitutiva"
         elif "complementaria" in pdf_text:
             tipo = "complementaria"
         else:
-            tipo = "normal"
-
-        nombre_archivo = f"{modelo}_{ejercicio}_{mes}_{nombre}.pdf"
+            tipo = None
+        if tipo:
+            nombre_archivo = f"{modelo}_{ejercicio}_{mes}_{nombre}_{tipo}.pdf"
+        else:
+            nombre_archivo = f"{modelo}_{ejercicio}_{mes}_{nombre}.pdf"
         # new_file_path = f"Y:/{nombre}_{nif}/{ejercicio}/IMPUESTOS/{periodo}/{nombre_archivo}"
 
         folder_path = f"Z:/Descargas/{nombre}_{nif}/{ejercicio}/IMPUESTOS/{periodo}/"

@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 
 import pyautogui
+from files_and_folders.files import File
 from files_and_folders.folders import Folder
 from files_and_folders.pdfs import PDF
 
@@ -71,67 +72,157 @@ class App:
         else:
             return []
 
-    def download_document(self, tramite):
 
+
+
+    def obtener_informacion_impuesto(self, tramite):
         self.browser.wait_for_element_to_be_clickable('xpath', AS.TRAMITES.value, 10)
         self.browser.find_elements('xpath', AS.TRAMITES.value)[tramite].click()
-        self.browser.wait_for_element("xpath", AS.DOCUMENTACION.value, 30)
-        self.browser.find_element('xpath', AS.DOCUMENTACION.value).click()
-        self.browser.wait_for_element("xpath", AS.DESCARGAR.value, 30)
-        if self.browser.element_exists("xpath", AS.NO_RESULTADOS.value):
-            return 'No hay resultados'
-        self.browser.find_elements('xpath', AS.BOTON_DESCARGA.value)[3].click()
-        return True
-
-    def go_back(self):
-        self.browser.find_element('xpath', AS.VOLVER.value).click()
-        self.browser.wait_for_element_to_disappear("xpath", AS.LOADING_PAGE.value, timeout=60)
-
-    def save_file(self, file, nombre, nif):
-
+        self.browser.wait_for_element_to_be_clickable('xpath', AS.TRAMITACION.value, 10)
         self.browser.find_element("xpath", AS.TRAMITACION.value).click()
+
 
         impuesto = self.browser.find_element("xpath", AS.NOMBRE_IMPUESTO.value).text
         modelo = self.browser.find_element("xpath", AS.MODELO_TEXTO.value).text
         fecha = self.browser.find_element("xpath", AS.FECHA_APERTURA.value).text
         fecha_apertura = datetime.strptime(fecha, "%d/%m/%Y")
         match = re.findall("M[0-9]+", modelo)
+        modelo = int(match[0].replace("M", ""))
+        return{"modelo": modelo, "impuesto": impuesto, "fecha_apertura": fecha_apertura}
 
-        if len(match) > 0:
-            modelo = match[0]
+    def download_document(self):
+        self.browser.wait_for_element("xpath", AS.DOCUMENTACION.value, 30)
+        self.browser.find_element('xpath', AS.DOCUMENTACION.value).click()
+        self.browser.wait_for_element("xpath", AS.DESCARGAR.value, 30)
+        if self.browser.element_exists("xpath", AS.NO_RESULTADOS.value):
+            return 'No hay resultados'
+
+        download_button = None
+        for row in self.browser.find_elements('xpath', "//tr"):
+            if "autoliquidación" in row.text or "Presentación" in row.text:
+                download_button = row.find_elements("xpath", ".//td")[-1]
+                break
+
+        if download_button:
+            download_button.click()
         else:
-            modelo = re.findall("([A-Z]{1}[0-9]{8}|[0-9]+[A-Z]{1})(.*?)([0-9]{4})", impuesto)[0][1]
+          self.browser.find_elements('xpath', AS.BOTON_DESCARGA.value)[3].click()
+        return True
 
-        ejercicio = fecha_apertura.year
 
-        mes = fecha_apertura.month
-        trimestre = math.ceil(mes / 3)
 
-        if "anual" in impuesto:
-            periodo = "CIERRE"
-        else:
-            periodo = f"{trimestre}º TRIM. {ejercicio}"
+    def go_back(self):
+        self.browser.find_element('xpath', AS.VOLVER.value).click()
+        self.browser.wait_for_element_to_disappear("xpath", AS.LOADING_PAGE.value, timeout=60)
+
+    def save_file(self, file, nombre, nif, modelo, impuesto):
 
         pdf = PDF(file.path)
-        pdf_text = pdf.read_file()
+        pdf_text = pdf.read_pdf()
 
-        # Buscamos el tipo
-        if "sustitutiva" in pdf_text:
-            tipo = "sustitutiva"
-        elif "complementaria" in pdf_text:
-            tipo = "complementaria"
+
+        modelos = {"mensual": [115, 123, 303, 349, 111],
+                   "trimestral": [115, 123, 303, 349, 110],
+                   "anual": [140, 180, 184, 200, 347, 390, 391, 190]}
+
+        año = re.findall('Ejercicio([\s\S]+?)(202\d{1})', pdf_text)
+        if len(año) > 0:
+            ejercicio = año[0][-1]
         else:
-            tipo = None
-        if tipo:
-            nombre_archivo = f"{modelo}_{ejercicio}_{mes}_{nombre}_{tipo}.pdf"
+            ejercicio = re.findall("(20\d{2})",impuesto)[0]
+
+        anual = re.findall(r'(>?Per[í|i]odo[\s\S]+?)(Anual)', pdf_text, re.IGNORECASE)
+
+
+
+
+        # Declaraciones complementarias y sustitutivas
+
+
+        nombre_documento = nombre[0:30]
+
+        if modelo in modelos["anual"]:
+            anual = re.findall(r'(>?Per[í|i]odo[\s\S]+?)(Anual)', pdf_text, re.IGNORECASE)
+            if modelo == 200:
+                periodo = "CIERRE"
+                nombre_archivo = f"{modelo}_{ejercicio}{nombre_documento}.pdf"
+            else:
+                periodo = f"4º TRIM. {ejercicio}"
+                nombre_archivo = f"{modelo}_{ejercicio}_4T{nombre_documento}.pdf"
+
         else:
-            nombre_archivo = f"{modelo}_{ejercicio}_{mes}_{nombre}.pdf"
-        # new_file_path = f"Y:/{nombre}_{nif}/{ejercicio}/IMPUESTOS/{periodo}/{nombre_archivo}"
+            mensual = re.findall(
+                r"(>?Per[í|i]odo[\s\S]+?)(ENERO|FEBR.|MARZO|ABRIL|MAYO|JUN.|JUL.|AGO.|SET.|OCT.|NOV.|DIC.)", pdf_text)
+            mensual_num = re.findall(f"(>?{ejercicio})\n(01|02|03|04|05|06|07|08|09|10|11|12)", pdf_text)
+            mensual_texto = re.findall(
+                "(Periodo\s)(.?)(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)",
+                pdf_text, re.IGNORECASE)
+            trimestral = re.findall('(TRIM\d{1})', pdf_text)
 
-        folder_path = f"Z:/Descargas/{nombre}_{nif}/{ejercicio}/IMPUESTOS/{periodo}/"
-        Folder(folder_path)
+            if len(trimestral) > 0:
+                trimestre = trimestral[0].replace("TRIM", "").strip()
+                periodo = f"{trimestre}º TRIM. {ejercicio}"
+                mes = f"{trimestre}T"
+                nombre_archivo = f"{modelo}_{ejercicio}_{mes}_{nombre_documento}.pdf"
 
-        file.move(folder_path)
+            elif len(mensual) > 0:
+                month_list = {
+                    'ENE.': 1,
+                    'FEBR.': 2,
+                    'MARZO': 3,
+                    'ABRIL': 4,
+                    'MAY0': 5,
+                    'JUN.': 6,
+                    'JUL.': 7,
+                    'AGO.': 8,
+                    'SEP.': 9,
+                    'OCT.': 10,
+                    'NOV.': 11,
+                    'DIC.': 12
+                }
+                mes = month_list[mensual[0][-1]]
+                trimestre = math.ceil(mes / 3)
+                periodo = f"{trimestre}º TRIM. {ejercicio}"
+                nombre_archivo = f"{modelo}_{ejercicio}_{mes}_{nombre_documento}.pdf"
+
+            elif len(mensual_num) > 0:
+                mes = mensual_num[0][-1]
+                trimestre = math.ceil(mes / 3)
+                periodo = f"{trimestre}º TRIM. {ejercicio}"
+                nombre_archivo = f"{modelo}_{ejercicio}_{mes}_{nombre_documento}.pdf"
+
+            elif len(mensual_texto) > 0:
+                meses_dict = {
+                    'ENERO': 1,
+                    'FEBRERO': 2,
+                    'MARZO': 3,
+                    'ABRIL': 4,
+                    'MAYO': 5,
+                    'JUNIO': 6,
+                    'JULIO': 7,
+                    'AGOSTO': 8,
+                    'SEPTIEMBRE': 9,
+                    'OCTUBRE': 10,
+                    'NOVIEMBRE': 11,
+                    'DICIEMBRE': 12
+                }
+                mes = meses_dict[mensual_texto[0][-1].upper()]
+                trimestre = math.ceil(mes / 3)
+                periodo = f"{trimestre}º TRIM. {ejercicio}"
+                nombre_archivo = f"{modelo}_{ejercicio}_{mes}_{nombre_documento}.pdf"
+
+                folder_path = f"Z:/Descargas/{nombre}_{nif}/{ejercicio}/IMPUESTOS/{periodo}/"
+                Folder(folder_path)
+                file.move(folder_path)
+
+                #Si el archivo  existe
+                if File(folder_path + nombre_archivo).exists:
+                      check = re.findall("(✔|✖)", pdf_text, re.IGNORECASE)
+                      if len(check) > 0:
+                          if len(re.findall("sustitutiva", pdf_text, re.IGNORECASE)) > 0:
+                              nombre_archivo= nombre_archivo.replace(".pdf","SUSTITUTIVA.pdf")
+                          elif len(re.findall("complementaria", pdf_text, re.IGNORECASE)):
+                              nombre_archivo = nombre_archivo.replace(".pdf","_COMPLEMENTARIA.pdf")
 
         file.rename(nombre_archivo)
 

@@ -31,8 +31,6 @@ class BusinessException(RobotException):
         elif self.next_action == "restart":
             self.restart(3)
         elif self.next_action == "skip":
-            self.robot.data = self.robot.data.drop(0)
-            self.robot.data.reset_index(drop=True, inplace=True)
             self.skip()
         elif self.next_action == "stop":
             self.stop()

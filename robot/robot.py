@@ -44,9 +44,9 @@ class Robot(Bot):
         """
 
         try:
-            self.tempFolder = "C:\\Users\\administrador\\Documents\\temp"
+            self.tempFolder = "Z:\\temp"
             self.folder = Folder(self.tempFolder)
-            self.folder.empty()
+            self.folder.empty(allow_root=True)
 
             prev_month = datetime.now() - relativedelta(months=1)
             self.start_date = f"1/{prev_month.month}/{prev_month.year}"
@@ -122,6 +122,7 @@ class Robot(Bot):
 
         except BusinessException as BE:
             self.log.business_exception(BE.message)
+            #self.data = self.data.drop(0)
             raise BE
         except Exception as e:
             self.log.system_exception("Error al obtener los documentos del cliente: Reintentando")
@@ -156,33 +157,48 @@ class Robot(Bot):
             tramites = args[0]
             tramite = tramites[0]
 
-            check_download = self.app.download_document(tramite)
+            tax_info = self.app.obtener_informacion_impuesto(tramite)
 
-            if check_download is not True:
-                raise BusinessException(self, message=check_download, next_action="skip")
+            lista_modelos=[115, 123, 303, 349, 140, 180, 184, 200, 347, 390, 391, 111, 110, 190]
+            if tax_info["modelo"] not in lista_modelos:
+                raise BusinessException(self, message="El modelo no se encuentra en la lista de modelos", next_action="skip")
+
+            if self.app.download_document() is not True:
+                raise BusinessException(self, message="No hay documentos a descargar", next_action="skip")
             time.sleep(5)
-            if len(self.folder.file_list()) == 0:
-                raise Exception("No se ha descargado el documento")
-            tramites.pop(0)
 
-            file = self.folder.file_list()[0]
-            impuesto = self.app.save_file(file, self.name, self.nif)
+            if len(self.folder.file_list(".pdf")) == 0:
+                raise Exception("No se ha descargado el documento")
+
+
+            file = self.folder.file_list(".pdf")[0]
+
+            try:
+                impuesto = self.app.save_file(file, self.name, self.nif,tax_info["modelo"], tax_info["impuesto"] )
+            except Exception as e:
+                self.log.system_exception(e)
+                raise Exception("No se puede leer el documento")
+            impuesto = impuesto[3]
+            self.log.trace(impuesto)
             self.app.go_back()
 
             page = self.wb.active
             page.append([self.nif, self.name, impuesto[0], impuesto[1], impuesto[2], impuesto[3]])
             self.wb.save(self.workbook_path)
             self.folder.empty()
+            tramites.pop(0)
             return tramites
 
         except BusinessException as BE:
             self.log.business_exception(BE.message)
+            tramites.pop(0)
+            self.app.go_back()
             raise BE
 
         except Exception as e:
-            self.log.system_exception("Error: Se va a reintentar la descarga del documento")
+            self.log.system_exception(e)
             try:
-                self.folder.empty()
+                self.folder.empty(allow_root=True)
                 self.app.go_back()
             except:
                 raise SystemException(self, message=e, next_action="retry")

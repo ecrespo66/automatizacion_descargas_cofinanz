@@ -211,19 +211,21 @@ class App:
                 periodo = f"{trimestre}º TRIM. {ejercicio}"
                 nombre_archivo = f"{modelo}_{ejercicio}_{mes}_{nombre_documento}.pdf"
 
-                folder_path = f"Z:/Descargas/{nombre}_{nif}/{ejercicio}/IMPUESTOS/{periodo}/"
-                Folder(folder_path)
-                file.move(folder_path)
+        folder_path = f"Z:/Descargas/{nombre}_{nif}/{ejercicio}/IMPUESTOS/{periodo}/"
+        Folder(folder_path)
 
-                #Si el archivo  existe
-                if File(folder_path + nombre_archivo).exists:
-                      check = re.findall("(✔|✖)", pdf_text, re.IGNORECASE)
-                      if len(check) > 0:
-                          if len(re.findall("sustitutiva", pdf_text, re.IGNORECASE)) > 0:
-                              nombre_archivo= nombre_archivo.replace(".pdf","SUSTITUTIVA.pdf")
-                          elif len(re.findall("complementaria", pdf_text, re.IGNORECASE)):
-                              nombre_archivo = nombre_archivo.replace(".pdf","_COMPLEMENTARIA.pdf")
+        #Si el archivo  existe
+        if File(folder_path + nombre_archivo).exists:
+              check = re.findall("(✔|✖)", pdf_text, re.IGNORECASE)
+              if len(check) > 0:
+                  if len(re.findall("sustitutiva", pdf_text, re.IGNORECASE)) > 0:
+                      nombre_archivo= nombre_archivo.replace(".pdf","SUSTITUTIVA.pdf")
+                  elif len(re.findall("complementaria", pdf_text, re.IGNORECASE)):
+                      nombre_archivo = nombre_archivo.replace(".pdf","_COMPLEMENTARIA.pdf")
 
-        file.rename(nombre_archivo)
+
+        file.move(folder_path)
+
+        file.rename(folder_path +  nombre_archivo)
 
         return (impuesto, modelo, periodo, file.path)

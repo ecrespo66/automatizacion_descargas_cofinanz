@@ -139,7 +139,7 @@ class App:
         # Declaraciones complementarias y sustitutivas
 
 
-        nombre_documento = nombre[0:30]
+        nombre_documento = nombre[0:50]
 
         if modelo in modelos["anual"]:
             anual = re.findall(r'(>?Per[í|i]odo[\s\S]+?)(Anual)', pdf_text, re.IGNORECASE)
@@ -148,7 +148,7 @@ class App:
                 nombre_archivo = f"{modelo}_{ejercicio}{nombre_documento}.pdf"
             else:
                 periodo = f"4º TRIM. {ejercicio}"
-                nombre_archivo = f"{modelo}_{ejercicio}_4T{nombre_documento}.pdf"
+                nombre_archivo = f"{modelo}_{ejercicio}_4T_{nombre_documento}.pdf"
 
         else:
             mensual = re.findall(
@@ -213,6 +213,7 @@ class App:
 
         folder_path = f"Z:/Descargas/{nombre}_{nif}/{ejercicio}/IMPUESTOS/{periodo}/"
         Folder(folder_path)
+        file.move(folder_path)
 
         #Si el archivo  existe
         if File(folder_path + nombre_archivo).exists:
@@ -220,12 +221,10 @@ class App:
               if len(check) > 0:
                   if len(re.findall("sustitutiva", pdf_text, re.IGNORECASE)) > 0:
                       nombre_archivo= nombre_archivo.replace(".pdf","SUSTITUTIVA.pdf")
+                      file.rename(nombre_archivo)
                   elif len(re.findall("complementaria", pdf_text, re.IGNORECASE)):
                       nombre_archivo = nombre_archivo.replace(".pdf","_COMPLEMENTARIA.pdf")
-
-
-        file.move(folder_path)
-
-        file.rename(folder_path +  nombre_archivo)
-
+                      file.rename(nombre_archivo)
+        else:
+            file.rename(nombre_archivo)
         return (impuesto, modelo, periodo, file.path)

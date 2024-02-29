@@ -66,10 +66,13 @@ class SystemException(RobotException):
                 time.sleep(10)
                 self.retry(3)
             except Exception as e:
-                self.robot.browser.get("https://ataria.ebizkaia.eus/es/mis-expedientes/")
+                self.robot.browser.close()
+                self.robot.browser.open(url="https://ataria.ebizkaia.eus/es/mis-expedientes/")
                 self.robot.data = self.robot.data.drop(0)
                 self.robot.data.reset_index(drop=True, inplace=True)
                 self.go_to_node("set_transaction_status", "Error al obtener los documentos del cliente")
+                self.robot.browser.close()
+                self.robot.app.login()
         elif self.next_action == "restart":
             self.restart(3)
         elif self.next_action == "skip":

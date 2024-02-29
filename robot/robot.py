@@ -159,7 +159,7 @@ class Robot(Bot):
 
             tax_info = self.app.obtener_informacion_impuesto(tramite)
 
-            lista_modelos=[115, 123, 303, 349, 140, 180, 184, 200, 347, 390, 391, 111, 110, 190]
+            lista_modelos = [115, 123, 303, 349, 140, 180, 184, 200, 347, 390, 391, 111, 110, 190]
             if tax_info["modelo"] not in lista_modelos:
                 raise BusinessException(self, message="El modelo no se encuentra en la lista de modelos", next_action="skip")
 
@@ -169,7 +169,6 @@ class Robot(Bot):
 
             if len(self.folder.file_list(".pdf")) == 0:
                 raise Exception("No se ha descargado el documento")
-
 
             file = self.folder.file_list(".pdf")[0]
 

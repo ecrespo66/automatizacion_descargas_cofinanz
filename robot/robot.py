@@ -105,8 +105,8 @@ class Robot(Bot):
 
         """
         try:
-            self.nif = args[0][0]
-            self.name = args[0][1]
+            self.nif = args[0].iloc[0]
+            self.name = args[0].iloc[1]
             self.log.debug(f"se va a procesar el {self.nif}")
             self.transaction_number = self.transaction_number + 1
 
@@ -122,7 +122,6 @@ class Robot(Bot):
 
         except BusinessException as BE:
             self.log.business_exception(BE.message)
-            #self.data = self.data.drop(0)
             raise BE
         except Exception as e:
             self.log.system_exception("Error al obtener los documentos del cliente: Reintentando")
@@ -177,8 +176,8 @@ class Robot(Bot):
             except Exception as e:
                 self.log.system_exception(e)
                 raise Exception("No se puede leer el documento")
-            impuesto = impuesto[3]
-            self.log.trace(impuesto)
+
+            self.log.trace(impuesto[3])
             self.app.go_back()
 
             page = self.wb.active

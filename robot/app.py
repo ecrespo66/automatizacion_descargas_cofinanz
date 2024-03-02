@@ -106,7 +106,8 @@ class App:
         if download_button:
             download_button.click()
         else:
-          self.browser.find_elements('xpath', AS.BOTON_DESCARGA.value)[3].click()
+            return 'No hay resultados'
+            #self.browser.find_elements('xpath', AS.BOTON_DESCARGA.value)[3].click()
         return True
 
 
@@ -131,7 +132,7 @@ class App:
         else:
             ejercicio = re.findall("(20\d{2})",impuesto)[0]
 
-        anual = re.findall(r'(>?Per[í|i]odo[\s\S]+?)(Anual)', pdf_text, re.IGNORECASE)
+        #anual = re.findall(r'(>?Per[í|i]odo[\s\S]+?)(Anual)', pdf_text, re.IGNORECASE)
 
 
 
@@ -167,7 +168,7 @@ class App:
 
             elif len(mensual) > 0:
                 month_list = {
-                    'ENE.': 1,
+                    'ENERO': 1,
                     'FEBR.': 2,
                     'MARZO': 3,
                     'ABRIL': 4,
@@ -180,7 +181,10 @@ class App:
                     'NOV.': 11,
                     'DIC.': 12
                 }
-                mes = month_list[mensual[0][-1]]
+                try:
+                    mes = month_list[mensual[0][-1]]
+                except:
+                    mes = month_list[mensual[-1][-1]]
                 trimestre = math.ceil(mes / 3)
                 periodo = f"{trimestre}º TRIM. {ejercicio}"
                 nombre_archivo = f"{modelo}_{ejercicio}_{mes}_{nombre_documento}.pdf"
@@ -206,7 +210,10 @@ class App:
                     'NOVIEMBRE': 11,
                     'DICIEMBRE': 12
                 }
-                mes = meses_dict[mensual_texto[0][-1].upper()]
+                try:
+                    mes = meses_dict[mensual_texto[0][-1].upper()]
+                except:
+                    mes = meses_dict[mensual_texto[-1][-1].upper()]
                 trimestre = math.ceil(mes / 3)
                 periodo = f"{trimestre}º TRIM. {ejercicio}"
                 nombre_archivo = f"{modelo}_{ejercicio}_{mes}_{nombre_documento}.pdf"

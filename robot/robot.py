@@ -21,7 +21,7 @@ class Robot(Bot):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs, disabled=True)
+        super().__init__(**kwargs, disabled=False)
         self.transaction_number = None
         self.data = None
         self.app = None

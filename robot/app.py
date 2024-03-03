@@ -222,7 +222,7 @@ class App:
 
         folder_path = f"Z:/Descargas/{nombre}_{nif}/{ejercicio}/IMPUESTOS/{periodo}/"
         Folder(folder_path)
-        file.move(folder_path)
+
 
         #Si el archivo  existe
         if File(folder_path + nombre_archivo).exists:
@@ -230,10 +230,17 @@ class App:
               if len(check) > 0:
                   if len(re.findall("sustitutiva", pdf_text, re.IGNORECASE)) > 0:
                       nombre_archivo= nombre_archivo.replace(".pdf","SUSTITUTIVA.pdf")
+                      file.move(folder_path)
                       file.rename(nombre_archivo)
                   elif len(re.findall("complementaria", pdf_text, re.IGNORECASE)):
                       nombre_archivo = nombre_archivo.replace(".pdf","_COMPLEMENTARIA.pdf")
+                      file.move(folder_path)
                       file.rename(nombre_archivo)
+                  else:
+                      file = File(folder_path + nombre_archivo)
+              else:
+                  file = File(folder_path + nombre_archivo)
         else:
+            file.move(folder_path)
             file.rename(nombre_archivo)
         return (impuesto, modelo, periodo, file.path)

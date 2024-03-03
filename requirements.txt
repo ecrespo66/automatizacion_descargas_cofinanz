@@ -1,6 +1,6 @@
 ibott-robot-manager
 ibott-browser-manager
-ibott-files==1.0.6
+ibott-files
 pandas
 openpyxl
 PyAutoGUI

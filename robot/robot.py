@@ -55,7 +55,16 @@ class Robot(Bot):
             self.browser = ChromeBrowser(undetectable=True)
             self.browser.options.page_load_strategy = "normal"
             #self.browser.options.page_load_strategy = 'none'
-            self.browser.set_download_folder(self.tempFolder)
+            self.browser.options.add_experimental_option("prefs", {
+                "download.prompt_for_download": False,  # Desactiva el diálogo de confirmación de descarga
+                "download.directory_upgrade": True,
+                "plugins.always_open_pdf_externally": True,
+                "download.default_directory": f"{self.tempFolder}",
+                "download.prompt_for_download": False,
+                "download.directory_upgrade": True,
+                "safebrowsing_for_trusted_sources_enabled": False,
+                "safebrowsing.enabled": False
+            })
             self.app = App(self.browser)
             self.app.login()
 

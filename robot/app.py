@@ -33,7 +33,7 @@ class App:
         self.browser.wait_for_element('xpath', AS.MIS_EXPEDIENTES.value)
         self.browser.find_element('xpath', AS.MIS_EXPEDIENTES.value).click()
         self.browser.wait_for_element('xpath', AS.CERTIFICADOS_DIGITALES.value, 20)
-        thread = threading.Thread(target=self.load_certificate, daemon=True)
+        thread = threading.Thread(target=self.load_certificate)
         thread.start()
         # self.load_certificate()
         self.browser.find_element('xpath', AS.CERTIFICADOS_DIGITALES.value).click()

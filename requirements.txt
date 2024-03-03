@@ -3,5 +3,5 @@ ibott-browser-manager
 ibott-files==1.0.6
 pandas
 openpyxl
-
+PyAutoGUI
 

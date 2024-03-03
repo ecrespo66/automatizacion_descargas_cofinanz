@@ -19,6 +19,8 @@ class App:
     @classmethod
     def load_certificate(self):
         time.sleep(10)
+        element = pyautogui.locateCenterOnScreen("certificate_popup.PNG", confidence=0.5)
+        pyautogui.click(element, clicks=1)
         pyautogui.press('enter')
 
     def login(self):

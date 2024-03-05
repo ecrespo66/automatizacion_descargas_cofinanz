@@ -49,9 +49,10 @@ class Robot(Bot):
             self.folder.empty(allow_root=True)
 
             #prev_month = datetime.now() - relativedelta(months=1)
-            self.start_date = self.parameters.get('date-from').replace("-","/")  #"1/{prev_month.month}/{prev_month.year}" #self.parameters.get('date-from')
-            self.end_date = self.parameters.get('date-to').replace("-","/")  #f"{last_day_of_month(prev_month.year, prev_month.month)}/{prev_month.month}/{prev_month.year}" #self.parameters.get('date-to')
+            self.start_date = datetime.strptime(self.parameters.get('date-from'), '%Y-%m-%d').strftime('%d/%m/%Y')  #"1/{prev_month.month}/{prev_month.year}" #self.parameters.get('date-from')
+            self.end_date = datetime.strptime(self.parameters.get('date-to'),  '%Y-%m-%d').strftime('%d/%m/%Y')  #f"{last_day_of_month(prev_month.year, prev_month.month)}/{prev_month.month}/{prev_month.year}" #self.parameters.get('date-to')
 
+            self.log.trace(f"Se van a obtener los impuestos desde {self.start_date} hasta {self.end_date}")
             self.browser = ChromeBrowser(undetectable=True)
             self.browser.options.page_load_strategy = "normal"
             #self.browser.options.page_load_strategy = 'none'

@@ -49,8 +49,8 @@ class Robot(Bot):
             self.folder.empty(allow_root=True)
 
             #prev_month = datetime.now() - relativedelta(months=1)
-            self.start_date = self.parameters.get('date-from') #"1/{prev_month.month}/{prev_month.year}" #self.parameters.get('date-from')
-            self.end_date = self.parameters.get('date-to') #f"{last_day_of_month(prev_month.year, prev_month.month)}/{prev_month.month}/{prev_month.year}" #self.parameters.get('date-to')
+            self.start_date = self.parameters.get('date-from').replace("-","/")  #"1/{prev_month.month}/{prev_month.year}" #self.parameters.get('date-from')
+            self.end_date = self.parameters.get('date-to').replace("-","/")  #f"{last_day_of_month(prev_month.year, prev_month.month)}/{prev_month.month}/{prev_month.year}" #self.parameters.get('date-to')
 
             self.browser = ChromeBrowser(undetectable=True)
             self.browser.options.page_load_strategy = "normal"

@@ -123,6 +123,10 @@ class App:
         pdf = PDF(file.path)
         pdf_text = pdf.read_pdf()
 
+        if not nif in pdf_text:
+
+            raise Exception("EL nif No coincide con el documento")
+
 
         modelos = {"mensual": [115, 123, 303, 349, 111],
                    "trimestral": [115, 123, 303, 349, 110],
@@ -136,9 +140,6 @@ class App:
 
         #anual = re.findall(r'(>?Per[í|i]odo[\s\S]+?)(Anual)', pdf_text, re.IGNORECASE)
 
-
-
-
         # Declaraciones complementarias y sustitutivas
 
 
@@ -151,7 +152,7 @@ class App:
                 nombre_archivo = f"{modelo}_{ejercicio}{nombre_documento}.pdf"
             else:
                 periodo = f"4º TRIM. {ejercicio}"
-                nombre_archivo = f"{modelo}_{ejercicio}_4T_{nombre_documento}.pdf"
+                nombre_archivo = f"{modelo}_{ejercicio}_{nombre_documento}.pdf"
 
         else:
             mensual = re.findall(
@@ -188,12 +189,20 @@ class App:
                 except:
                     mes = month_list[mensual[-1][-1]]
                 trimestre = math.ceil(mes / 3)
+
+                if len(str(mes)) == 1:
+                    mes = '0' + str(mes)
+
                 periodo = f"{trimestre}º TRIM. {ejercicio}"
                 nombre_archivo = f"{modelo}_{ejercicio}_{mes}_{nombre_documento}.pdf"
 
             elif len(mensual_num) > 0:
                 mes = mensual_num[0][-1]
                 trimestre = math.ceil(mes / 3)
+
+                if len(str(mes)) == 1:
+                    mes = '0' + str(mes)
+
                 periodo = f"{trimestre}º TRIM. {ejercicio}"
                 nombre_archivo = f"{modelo}_{ejercicio}_{mes}_{nombre_documento}.pdf"
 
@@ -217,6 +226,10 @@ class App:
                 except:
                     mes = meses_dict[mensual_texto[-1][-1].upper()]
                 trimestre = math.ceil(mes / 3)
+
+                if len(str(mes)) == 1:
+                    mes = '0'+ str(mes)
+
                 periodo = f"{trimestre}º TRIM. {ejercicio}"
                 nombre_archivo = f"{modelo}_{ejercicio}_{mes}_{nombre_documento}.pdf"
 

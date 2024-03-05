@@ -165,6 +165,7 @@ class Robot(Bot):
             tramites = args[0]
             tramite = tramites[0]
 
+            self.folder.empty()
             tax_info = self.app.obtener_informacion_impuesto(tramite)
 
             lista_modelos = [115, 123, 303, 349, 140, 180, 184, 200, 347, 390, 391, 111, 110, 190]
@@ -181,10 +182,10 @@ class Robot(Bot):
             file = self.folder.file_list(".pdf")[0]
 
             try:
-                impuesto = self.app.save_file(file, self.name, self.nif,tax_info["modelo"], tax_info["impuesto"] )
+                impuesto = self.app.save_file(file, self.name, self.nif, tax_info["modelo"], tax_info["impuesto"] )
             except Exception as e:
                 self.log.system_exception(e)
-                raise Exception("No se puede leer el documento")
+                raise Exception(e)
 
             self.log.trace(impuesto[3])
             self.app.go_back()

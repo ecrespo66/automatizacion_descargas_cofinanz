@@ -124,12 +124,10 @@ class App:
         pdf_text = pdf.read_pdf()
 
         if not nif in pdf_text:
-
-            raise Exception("EL nif No coincide con el documento")
-
+            raise Exception("El nif No coincide con el documento")
 
         modelos = {"mensual": [115, 123, 303, 349, 111],
-                   "trimestral": [115, 123, 303, 349, 110],
+                   "trimestral": [115, 130, 123, 303, 349, 110],
                    "anual": [140, 180, 184, 200, 347, 390, 391, 190]}
 
         año = re.findall('Ejercicio([\s\S]+?)(202\d{1})', pdf_text)

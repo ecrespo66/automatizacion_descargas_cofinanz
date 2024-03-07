@@ -48,9 +48,9 @@ class Robot(Bot):
             self.folder = Folder(self.tempFolder)
             self.folder.empty(allow_root=True)
 
-            #prev_month = datetime.now() - relativedelta(months=1)
-            self.start_date = datetime.strptime(self.parameters.get('date-from'), '%Y-%m-%d').strftime('%d/%m/%Y')  #"1/{prev_month.month}/{prev_month.year}" #self.parameters.get('date-from')
-            self.end_date = datetime.strptime(self.parameters.get('date-to'),  '%Y-%m-%d').strftime('%d/%m/%Y')  #f"{last_day_of_month(prev_month.year, prev_month.month)}/{prev_month.month}/{prev_month.year}" #self.parameters.get('date-to')
+            #prev_month = datetime.now() - relativedelta(months=2)
+            self.start_date = datetime.strptime(self.parameters.get('date-from'), '%Y-%m-%d').strftime('%d/%m/%Y') #f"1/{prev_month.month}/{prev_month.year}" #
+            self.end_date =  datetime.strptime(self.parameters.get('date-to'),  '%Y-%m-%d').strftime('%d/%m/%Y')  #f"{last_day_of_month(prev_month.year, prev_month.month +1)}/{prev_month.month+1}/{prev_month.year}"
 
             self.log.trace(f"Se van a obtener los impuestos desde {self.start_date} hasta {self.end_date}")
             self.browser = ChromeBrowser(undetectable=True)
@@ -168,8 +168,8 @@ class Robot(Bot):
 
             self.folder.empty()
             tax_info = self.app.obtener_informacion_impuesto(tramite)
-
-            lista_modelos = [115, 123, 303, 349, 140, 180, 184, 200, 347, 390, 391, 111, 110, 190]
+            self.log.trace("Modelo: " + str(tax_info["modelo"]))
+            lista_modelos = [115, 123, 130, 303, 349, 140, 180, 184, 200, 347, 390, 391, 111, 110, 190]
             if tax_info["modelo"] not in lista_modelos:
                 raise BusinessException(self, message="El modelo no se encuentra en la lista de modelos", next_action="skip")
 

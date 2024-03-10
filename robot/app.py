@@ -19,9 +19,11 @@ class App:
     @classmethod
     def load_certificate(self):
         time.sleep(10)
-        element = pyautogui.locateCenterOnScreen("C:\\Users\\administrador\\Documents\\boton_aceptar.PNG", confidence=0.5)
-        pyautogui.click(element, clicks=1)
-        #pyautogui.press('enter')
+        try:
+            element = pyautogui.locateCenterOnScreen("C:\\Users\\administrador\\Documents\\boton_aceptar.PNG", confidence=0.5)
+            pyautogui.click(element, clicks=1)
+        except:
+            pyautogui.press('enter')
 
     def login(self):
 

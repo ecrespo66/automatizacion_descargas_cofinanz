@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 
 import pyautogui
+pyautogui.FAILSAFE = False
 from files_and_folders.files import File
 from files_and_folders.folders import Folder
 from files_and_folders.pdfs import PDF

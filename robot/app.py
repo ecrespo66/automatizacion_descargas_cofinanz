@@ -4,8 +4,7 @@ import threading
 import time
 from datetime import datetime
 
-import pyautogui
-pyautogui.FAILSAFE = False
+from pywinauto import Desktop
 from files_and_folders.files import File
 from files_and_folders.folders import Folder
 from files_and_folders.pdfs import PDF
@@ -20,11 +19,14 @@ class App:
     @classmethod
     def load_certificate(self):
         time.sleep(10)
+        desktop.window(title="Seleccionar un certificado", top_level_only=False, found_index=0).child_window(title="Aceptar", control_type="Button").click() 
+        '''
         try:
             element = pyautogui.locateCenterOnScreen("C:\\Users\\administrador\\Documents\\boton_aceptar.PNG", confidence=0.5)
             pyautogui.click(element, clicks=1)
         except:
             pyautogui.press('enter')
+        '''
 
     def login(self):
 

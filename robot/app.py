@@ -19,14 +19,7 @@ class App:
     @classmethod
     def load_certificate(self):
         time.sleep(10)
-        desktop.window(title="Seleccionar un certificado", top_level_only=False, found_index=0).child_window(title="Aceptar", control_type="Button").click() 
-        '''
-        try:
-            element = pyautogui.locateCenterOnScreen("C:\\Users\\administrador\\Documents\\boton_aceptar.PNG", confidence=0.5)
-            pyautogui.click(element, clicks=1)
-        except:
-            pyautogui.press('enter')
-        '''
+        desktop.window(title="Seleccionar un certificado", top_level_only=False, found_index=0).child_window(title="Aceptar", control_type="Button").click()
 
     def login(self):
 

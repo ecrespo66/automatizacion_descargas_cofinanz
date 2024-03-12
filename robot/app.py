@@ -21,7 +21,10 @@ class App:
         time.sleep(10)
         # Crea un objeto Desktop para interactuar con la interfaz de usuario de Windows
         desktop = Desktop(backend="uia")
-        desktop.window(title="Seleccionar un certificado", top_level_only=False, found_index=0).child_window(title="Aceptar", control_type="Button").click()
+        main_window = desktop.window(title="Seleccionar un certificado", top_level_only=False, found_index=0)
+        main_window.wait('visible')
+        main_window.set_focus()
+        main_window.child_window(title="Aceptar", control_type="Button").click()
 
     def login(self):
 

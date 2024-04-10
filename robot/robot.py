@@ -12,7 +12,7 @@ from robot.app import App
 from .flow import *
 from .exceptions import *
 from .utils import last_day_of_month
-
+from email_activities.mails import Mail
 
 class Robot(Bot):
     """
@@ -47,7 +47,8 @@ class Robot(Bot):
             self.tempFolder = "Z:\\temp"
             self.folder = Folder(self.tempFolder)
             self.folder.empty(allow_root=True)
-
+            self.mail = Mail('envios@asesoriaheras.es', "Voz94497", 'asesoriaheras-es.mail.protection.outlook.com', 587,
+                        'asesoriaheras-es.mail.protection.outlook.com', 993)
             #prev_month = datetime.now() - relativedelta(months=2)
             self.start_date = datetime.strptime(self.parameters.get('date-from'), '%Y-%m-%d').strftime('%d/%m/%Y') #f"1/{prev_month.month}/{prev_month.year}" #
             self.end_date =  datetime.strptime(self.parameters.get('date-to'),  '%Y-%m-%d').strftime('%d/%m/%Y')  #f"{last_day_of_month(prev_month.year, prev_month.month +1)}/{prev_month.month+1}/{prev_month.year}"
@@ -196,6 +197,17 @@ class Robot(Bot):
             self.wb.save(self.workbook_path)
             self.folder.empty()
             tramites.pop(0)
+
+
+
+
+
+            modelo = tax_info['modelo']
+            perido = impuesto[2]
+            subject = f"Impuesto {modelo} {perido}"
+            archivo = impuesto[3]
+            self.mail.send(["enrique.crespo.debenito@gmail.com"], subject=subject, text="test", files=[archivo])
+
             return tramites
 
         except BusinessException as BE:

@@ -1,5 +1,7 @@
 import time
 from datetime import datetime
+
+import openpyxl
 from browser.chrome import ChromeBrowser
 from dateutil.relativedelta import relativedelta
 from files_and_folders.folders import Folder
@@ -47,12 +49,11 @@ class Robot(Bot):
             self.tempFolder = "Z:\\temp"
             self.folder = Folder(self.tempFolder)
             self.folder.empty(allow_root=True)
-            self.mail = Mail('envios@asesoriaheras.es', "Voz94497", 'asesoriaheras-es.mail.protection.outlook.com', 587,
-                        'asesoriaheras-es.mail.protection.outlook.com', 993)
             #prev_month = datetime.now() - relativedelta(months=2)
-            self.start_date = datetime.strptime(self.parameters.get('date-from'), '%Y-%m-%d').strftime('%d/%m/%Y') #f"1/{prev_month.month}/{prev_month.year}" #
+            self.start_date = datetime.strptime(self.parameters.get('date-from'), '%Y-%m-%d').strftime('%d/%m/%Y') # #f"1/{prev_month.month}/{prev_month.year}" #
             self.end_date =  datetime.strptime(self.parameters.get('date-to'),  '%Y-%m-%d').strftime('%d/%m/%Y')  #f"{last_day_of_month(prev_month.year, prev_month.month +1)}/{prev_month.month+1}/{prev_month.year}"
-
+            self.mail = Mail('envios@asesoriaheras.es', "Voz94497", 'asesoriaheras-es.mail.protection.outlook.com', 25,
+                             'asesoriaheras-es.mail.protection.outlook.com', 993)
             self.log.trace(f"Se van a obtener los impuestos desde {self.start_date} hasta {self.end_date}")
             self.browser = ChromeBrowser(undetectable=True)
             self.browser.options.page_load_strategy = "normal"
@@ -70,16 +71,10 @@ class Robot(Bot):
             self.app = App(self.browser)
             self.app.login()
 
-            self.data = pd.read_excel("Z:\CLIENTES Y MAILS.xlsx")
-            self.workbook_path = 'Z:\Descargas\clientes_impuestos.xlsx'
+            self.workbook_path = "Z:\CLIENTES Y MAILS.xlsx"
+            self.data = pd.read_excel(self.workbook_path)
             self.transaction_number = 0
-
-
-            self.wb = Workbook()
-            page = self.wb.active
-            page.title = 'documentos'
-            page.append(['cif', 'Nombre', 'Impuesto', 'Modelo','Periodo', "Archivo"])  # write the headers to the first line
-            self.wb.save(self.workbook_path)
+            self.wb = openpyxl.load_workbook(self.workbook_path)
 
 
         except Exception as e:
@@ -118,6 +113,7 @@ class Robot(Bot):
         try:
             self.nif = args[0].iloc[0]
             self.name = args[0].iloc[1]
+            self.downloaded_documents = []
             self.log.debug(f"se va a procesar el {self.nif}")
             self.transaction_number = self.transaction_number + 1
 
@@ -192,22 +188,14 @@ class Robot(Bot):
             self.log.trace(impuesto[3])
             self.app.go_back()
 
-            page = self.wb.active
+            page = self.wb['IMPUESTOS']
             page.append([self.nif, self.name, impuesto[0], impuesto[1], impuesto[2], impuesto[3]])
             self.wb.save(self.workbook_path)
             self.folder.empty()
             tramites.pop(0)
 
-
-
-
-
-            modelo = tax_info['modelo']
-            perido = impuesto[2]
-            subject = f"Impuesto {modelo} {perido}"
             archivo = impuesto[3]
-            self.mail.send(["enrique.crespo.debenito@gmail.com"], subject=subject, text="test", files=[archivo])
-
+            self.downloaded_documents.append(archivo)
             return tramites
 
         except BusinessException as BE:
@@ -231,12 +219,31 @@ class Robot(Bot):
         # Remove Processed Item
         if len(args[0]) > 0:
             result = args[0][0]
-            page = self.wb.active
-            page.append([self.nif, self.name, "#N/A", "#N/A", "#N/A", result])
-            self.wb.save(self.workbook_path)
         else:
             result = "OK"
             self.log.trace(result)
+
+            text = f"Estimado cliente:\nAdjunto se remite documentación contable PARA ARCHIVAR. Con la obligación de que sea guardada en forma impresa o en este formato (serecomienda las dos), para posible presentación ante: Organismos, Inspecciones, Bancos, etc.\nAtentamente."
+            #self.mail.send(["alicia@asesoriaheras.es", "arantza@asesoriaheras.es"], "ENVIO IMPUESTOS", text=text, files= self.downloaded_documents)
+
+            # Selecciona la hoja en la que quieres buscar y actualizar
+        hoja = self.wb['CLIENTES']
+        # Dato que estás buscando
+        dato_a_buscar = self.nif
+        # Busca el dato en la columna A y obtén la fila
+        fila = None
+        for fila_actual in range(1, hoja.max_row + 1):
+            if hoja.cell(row=fila_actual, column=1).value == dato_a_buscar:
+                fila = fila_actual
+                break
+        # Si se encuentra el dato, actualiza la celda correspondiente en la columna D
+        if fila is not None:
+            hoja.cell(row=fila, column=7).value = result
+            hoja.cell(row=fila, column=8).value = datetime.today().strftime("%d-%m-%y")
+        # Guarda los cambios en el archivo
+        self.wb.save("Z:\CLIENTES Y MAILS.xlsx")
+        self.wb.close()
+
         self.data = self.data.drop(0)
         self.data.reset_index(drop=True, inplace=True)
 

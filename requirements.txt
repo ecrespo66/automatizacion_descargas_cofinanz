@@ -6,4 +6,4 @@ openpyxl
 PyAutoGUI
 opencv_python
 pywinauto
-ibott-mail
+ibott-mail==1.0.6

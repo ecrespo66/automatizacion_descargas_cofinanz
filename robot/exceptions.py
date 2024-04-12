@@ -36,8 +36,8 @@ class BusinessException(RobotException):
             self.stop()
         else:
             try:
-                self.robot.data = self.robot.data.drop(0)
-                self.robot.data.reset_index(drop=True, inplace=True)
+                #self.robot.data = self.robot.data.drop(0)
+                #self.robot.data.reset_index(drop=True, inplace=True)
                 self.go_to_node(self.next_action, self.message)
             except:
                 raise Exception("Invalid next_action")

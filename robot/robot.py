@@ -23,7 +23,7 @@ class Robot(Bot):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs, disabled=False)
+        super().__init__(**kwargs, disabled=True)
         self.transaction_number = None
         self.data = None
         self.app = None
@@ -47,17 +47,16 @@ class Robot(Bot):
 
         try:
             self.tempFolder = "Z:\\temp"
+            self.workbook_path = "Z:\CLIENTES Y MAILS.xlsx"
             self.folder = Folder(self.tempFolder)
             self.folder.empty(allow_root=True)
-            #prev_month = datetime.now() - relativedelta(months=2)
-            self.start_date = datetime.strptime(self.parameters.get('date-from'), '%Y-%m-%d').strftime('%d/%m/%Y') # #f"1/{prev_month.month}/{prev_month.year}" #
-            self.end_date =  datetime.strptime(self.parameters.get('date-to'),  '%Y-%m-%d').strftime('%d/%m/%Y')  #f"{last_day_of_month(prev_month.year, prev_month.month +1)}/{prev_month.month+1}/{prev_month.year}"
-            self.mail = Mail('envios@asesoriaheras.es', "Voz94497", 'asesoriaheras-es.mail.protection.outlook.com', 25,
-                             'asesoriaheras-es.mail.protection.outlook.com', 993)
+            prev_month = datetime.now() - relativedelta(months=2)
+            self.start_date = f"1/{prev_month.month}/{prev_month.year}" #datetime.strptime(self.parameters.get('date-from'), '%Y-%m-%d').strftime('%d/%m/%Y') # # #
+            self.end_date =  f"{last_day_of_month(prev_month.year, prev_month.month +1)}/{prev_month.month+1}/{prev_month.year}" #datetime.strptime(self.parameters.get('date-to'),  '%Y-%m-%d').strftime('%d/%m/%Y')  #
+
             self.log.trace(f"Se van a obtener los impuestos desde {self.start_date} hasta {self.end_date}")
             self.browser = ChromeBrowser(undetectable=True)
             self.browser.options.page_load_strategy = "normal"
-            #self.browser.options.page_load_strategy = 'none'
             self.browser.options.add_experimental_option("prefs", {
                 "download.prompt_for_download": False,  # Desactiva el diálogo de confirmación de descarga
                 "download.directory_upgrade": True,
@@ -70,13 +69,9 @@ class Robot(Bot):
             })
             self.app = App(self.browser)
             self.app.login()
-
-            self.workbook_path = "Z:\CLIENTES Y MAILS.xlsx"
             self.data = pd.read_excel(self.workbook_path)
             self.transaction_number = 0
             self.wb = openpyxl.load_workbook(self.workbook_path)
-
-
         except Exception as e:
             self.browser.close()
             self.log.system_exception(e)

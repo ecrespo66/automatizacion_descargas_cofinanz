@@ -30,14 +30,16 @@ class App:
 
         self.browser.open("https://www.ebizkaia.eus/es/profesional")
         self.browser.maximize_window()
-
         if self.browser.element_exists('xpath', AS.ACEPTAR_COOKIES.value):
             self.browser.find_element('xpath', AS.ACEPTAR_COOKIES.value).click()
-        self.browser.wait_for_element('xpath', AS.MIS_GESTIONES.value)
+        #self.browser.wait_for_element('xpath', AS.MIS_GESTIONES.value)
+        time.sleep(10)
         self.browser.find_element('xpath', AS.MIS_GESTIONES.value).click()
-        self.browser.wait_for_element('xpath', AS.MIS_EXPEDIENTES.value)
+        #self.browser.wait_for_element('xpath', AS.MIS_EXPEDIENTES.value)
+        time.sleep(10)
         self.browser.find_element('xpath', AS.MIS_EXPEDIENTES.value).click()
-        self.browser.wait_for_element('xpath', AS.CERTIFICADOS_DIGITALES.value, 20)
+        time.sleep(10)
+        #self.browser.wait_for_element('xpath', AS.CERTIFICADOS_DIGITALES.value, 20)
         thread = threading.Thread(target=self.load_certificate)
         thread.start()
         # self.load_certificate()

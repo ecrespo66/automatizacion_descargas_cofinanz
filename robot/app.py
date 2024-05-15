@@ -18,7 +18,7 @@ class App:
 
     @classmethod
     def load_certificate(self):
-        time.sleep(10)
+        time.sleep(30)
         # Crea un objeto Desktop para interactuar con la interfaz de usuario de Windows
         desktop = Desktop(backend="uia")
         main_window = desktop.window(title="Seleccionar un certificado", top_level_only=False, found_index=0)

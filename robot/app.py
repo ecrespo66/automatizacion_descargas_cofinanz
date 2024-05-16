@@ -3,12 +3,11 @@ import re
 import threading
 import time
 from datetime import datetime
-
 from pywinauto import Desktop
 from files_and_folders.files import File
 from files_and_folders.folders import Folder
 from files_and_folders.pdfs import PDF
-
+from selenium.webdriver import Keys, ActionChains
 from .selectors import AppSelectors as AS
 
 
@@ -17,55 +16,86 @@ class App:
         self.browser = browser
 
     @classmethod
-    def load_certificate(self):
-        time.sleep(30)
+    def load_certificate(self, browser):
+        time.sleep(10)
         # Crea un objeto Desktop para interactuar con la interfaz de usuario de Windows
         desktop = Desktop(backend="uia")
         main_window = desktop.window(title="Seleccionar un certificado", top_level_only=False, found_index=0)
         main_window.wait('visible')
         main_window.set_focus()
         main_window.child_window(title="Aceptar", control_type="Button").click()
+        actions = ActionChains(browser)
+        actions.send_keys(Keys.ENTER)
+        actions.perform()
+
 
     def login(self):
 
         self.browser.open("https://www.ebizkaia.eus/es/profesional")
         self.browser.maximize_window()
+
         if self.browser.element_exists('xpath', AS.ACEPTAR_COOKIES.value):
             self.browser.find_element('xpath', AS.ACEPTAR_COOKIES.value).click()
-        #self.browser.wait_for_element('xpath', AS.MIS_GESTIONES.value)
-        time.sleep(10)
+        self.browser.wait_for_element('xpath', AS.MIS_GESTIONES.value)
         self.browser.find_element('xpath', AS.MIS_GESTIONES.value).click()
-        #self.browser.wait_for_element('xpath', AS.MIS_EXPEDIENTES.value)
-        time.sleep(10)
-        self.browser.find_element('xpath', AS.MIS_EXPEDIENTES.value).click()
-        time.sleep(10)
-        #self.browser.wait_for_element('xpath', AS.CERTIFICADOS_DIGITALES.value, 20)
-        thread = threading.Thread(target=self.load_certificate)
+        self.browser.wait_for_element('xpath', AS.MIS_PRESENTACIONES.value)
+        self.browser.find_element('xpath', AS.MIS_PRESENTACIONES.value).click()
+        self.browser.wait_for_element('xpath', AS.CERTIFICADOS_DIGITALES.value, 20)
+        thread = threading.Thread(target=self.load_certificate,args=(self.browser,) )
         thread.start()
         # self.load_certificate()
         self.browser.find_element('xpath', AS.CERTIFICADOS_DIGITALES.value).click()
 
     def find_client(self, nif):
+
         self.browser.wait_for_element('xpath', AS.INPUT_SELECTOR.value, 60)
         self.browser.find_element("xpath", AS.INPUT_SELECTOR.value).click()
+        self.browser.find_element("xpath", AS.INPUT_SELECTOR.value).send_keys(Keys.COMMAND + "a")
+
         self.browser.find_element("xpath", AS.INPUT_SELECTOR.value).clear()
+
         self.browser.find_element("xpath", AS.INPUT_SELECTOR.value).send_keys(nif)
 
         CLIENT_SELECTOR = f"//span[contains(text(),'{nif}')]"
-        time.sleep(10)
-        if self.browser.element_exists("xpath", CLIENT_SELECTOR):
+
+        try:
+            self.browser.wait_for_element("xpath", CLIENT_SELECTOR, timeout=10)
             self.browser.find_element("xpath", CLIENT_SELECTOR).click()
             self.browser.wait_for_element_to_disappear("xpath", AS.LOADING_PAGE.value, timeout=60)
-        else:
+        except:
             return False
+
+
+    def obtener_tramistes(self):
+        return
+
+    def descargar_documentos(self, i):
+        self.browser.find_element('xpath',  f"//*[@id='form1:tablaPresentaciones:{i}:AccionPresentacion']").click()
+        time.sleep(1)
+        try:
+            self.browser.wait_for_element("xpath", f"//a[@id='form1:tablaPresentaciones:{i}:justificante_']", 10)
+        except:
+            self.browser.find_element("xpath", AS.BUSCAR.value).click()
+            time.sleep(1)
+            self.browser.find_element('xpath', f"//*[@id='form1:tablaPresentaciones:{i}:AccionPresentacion']").click()
+            self.browser.wait_for_element("xpath", f"//a[@id='form1:tablaPresentaciones:{i}:justificante_']", 10)
+
+        self.browser.find_element('xpath', f"//a[@id='form1:tablaPresentaciones:{i}:justificante_']").click()
+        time.sleep(3)
+        self.browser.find_element('xpath', f"//tr[@data-ri='{i}']").click()
+        self.browser.find_element('xpath', f"//tr[@data-ri='{i}']").click()
+
+
+        return
+
 
     def filter_data(self, start_date, end_date):
 
         self.browser.wait_for_element_to_be_clickable("xpath", AS.CAMBIAR_BUSQUEDA.value, 30)
         self.browser.find_element('xpath', AS.CAMBIAR_BUSQUEDA.value).click()
         self.browser.wait_for_element("xpath", AS.FECHA_DESDE.value, 30)
-        self.browser.find_element("xpath", AS.FECHA_DESDE.value).send_keys(
-            start_date)
+        time.sleep(2)
+        self.browser.find_element("xpath", AS.FECHA_DESDE.value).send_keys(start_date)
 
         self.browser.find_element("xpath", AS.FECHA_HASTA.value).send_keys(
             end_date)
@@ -73,9 +103,10 @@ class App:
 
         self.browser.wait_for_element_to_disappear("xpath", AS.LOADING_PAGE.value, timeout=60)
         time.sleep(5)
-        if self.browser.element_exists('xpath', AS.EXPEDIENTES_ENCONTRADOS.value):
-            tramites = self.browser.find_elements('xpath', AS.TRAMITES.value)
-            return [*range(len(tramites))]
+        tramites = int(self.browser.find_element('xpath', AS.EXPEDIENTES_ENCONTRADOS.value).text.split(" ")[0])
+
+        if tramites > 0:
+            return [*range(tramites)]
         else:
             return []
 
@@ -123,10 +154,17 @@ class App:
         self.browser.find_element('xpath', AS.VOLVER.value).click()
         self.browser.wait_for_element_to_disappear("xpath", AS.LOADING_PAGE.value, timeout=60)
 
-    def save_file(self, file, nombre, nif, modelo, impuesto):
+    def save_file(self, file, nombre, nif, cod_cliente):
 
         pdf = PDF(file.path)
         pdf_text = pdf.read_pdf()
+        periodo = ""
+        modelo = re.findall(r"Modelo (\d{3})", pdf_text)
+
+        if len(modelo) >0:
+            modelo = modelo[0]
+        else:
+            raise Exception("No se localiza el modelo en el documento")
 
         if not nif in pdf_text:
             raise Exception("El nif No coincide con el documento")
@@ -139,7 +177,7 @@ class App:
         if len(año) > 0:
             ejercicio = año[0][-1]
         else:
-            ejercicio = re.findall("(20\d{2})",impuesto)[0]
+            ejercicio = re.findall("(20\d{2})",pdf_text)[0]
 
         #anual = re.findall(r'(>?Per[í|i]odo[\s\S]+?)(Anual)', pdf_text, re.IGNORECASE)
 
@@ -149,13 +187,8 @@ class App:
         nombre_documento = nombre[0:50]
 
         if modelo in modelos["anual"]:
-            anual = re.findall(r'(>?Per[í|i]odo[\s\S]+?)(Anual)', pdf_text, re.IGNORECASE)
-            if modelo == 200:
-                periodo = "CIERRE"
-                nombre_archivo = f"{modelo}_{ejercicio}{nombre_documento}.pdf"
-            else:
-                periodo = f"4º TRIM. {ejercicio}"
-                nombre_archivo = f"{modelo}_{ejercicio}_{nombre_documento}.pdf"
+            #anual = re.findall(r'(>?Per[í|i]odo[\s\S]+?)(Anual)', pdf_text, re.IGNORECASE)
+            nombre_archivo = f"{nif} {modelo} {ejercicio[-2:]}.pdf"
 
         else:
             mensual = re.findall(
@@ -168,9 +201,9 @@ class App:
 
             if len(trimestral) > 0:
                 trimestre = trimestral[0].replace("TRIM", "").strip()
-                periodo = f"{trimestre}º TRIM. {ejercicio}"
-                mes = f"{trimestre}T"
-                nombre_archivo = f"{modelo}_{ejercicio}_{mes}_{nombre_documento}.pdf"
+                periodo = f"{trimestre} trim "
+                #mes = f"{trimestre}T"
+                #nombre_archivo = f"{nif} {modelo} {periodo} {ejercicio[-2:]}.pdf"
 
             elif len(mensual) > 0:
                 month_list = {
@@ -197,7 +230,7 @@ class App:
                     mes = '0' + str(mes)
 
                 periodo = f"{trimestre}º TRIM. {ejercicio}"
-                nombre_archivo = f"{modelo}_{ejercicio}_{mes}_{nombre_documento}.pdf"
+                nombre_archivo = f"{nif} {modelo}  {periodo} {ejercicio}.pdf"
 
             elif len(mensual_num) > 0:
                 mes = mensual_num[0][-1]
@@ -206,8 +239,8 @@ class App:
                 if len(str(mes)) == 1:
                     mes = '0' + str(mes)
 
-                periodo = f"{trimestre}º TRIM. {ejercicio}"
-                nombre_archivo = f"{modelo}_{ejercicio}_{mes}_{nombre_documento}.pdf"
+                periodo = f"{trimestre} trim"
+                #nombre_archivo = f"{nif} {modelo} {periodo} {ejercicio[-2:]}.pdf"
 
             elif len(mensual_texto) > 0:
                 meses_dict = {
@@ -231,15 +264,15 @@ class App:
                 trimestre = math.ceil(mes / 3)
 
                 if len(str(mes)) == 1:
-                    mes = '0'+ str(mes)
+                    mes = '0' + str(mes)
+                periodo = f"{trimestre} trim "
 
-                periodo = f"{trimestre}º TRIM. {ejercicio}"
-                nombre_archivo = f"{modelo}_{ejercicio}_{mes}_{nombre_documento}.pdf"
-
-        folder_path = f"Z:/Descargas/{nombre}_{nif}/{ejercicio}/IMPUESTOS/{periodo}/"
+        nombre_archivo = f"{nif} {cod_cliente} {modelo} {periodo} {ejercicio[-2:]}.pdf"
+        folder_path = f"/Users/enriquecrespodebenito/PycharmProjects/automatizacion_descarga_Cofinanz/CONTABLEFISCAL/CLIENTES/{cod_cliente}/IMPUESTOS/{ejercicio}/"
         Folder(folder_path)
-
-
+        file.move(folder_path)
+        file.rename(nombre_archivo)
+        """
         #Si el archivo  existe
         if File(folder_path + nombre_archivo).exists:
               check = re.findall("(✔|✖)", pdf_text, re.IGNORECASE)
@@ -259,4 +292,5 @@ class App:
         else:
             file.move(folder_path)
             file.rename(nombre_archivo)
-        return (impuesto, modelo, periodo, file.path)
+        """
+        return (modelo, periodo, file.path)

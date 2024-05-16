@@ -71,7 +71,7 @@ class SystemException(RobotException):
                 self.robot.data = self.robot.data.drop(0)
                 self.robot.data.reset_index(drop=True, inplace=True)
                 self.robot.browser.close()
-                self.robot.browser.open(url="https://ataria.ebizkaia.eus/es/mis-expedientes/")
+                self.robot.browser.open(url="https://ataria.ebizkaia.eus/es/mis-presentaciones")
                 self.robot.app.login()
                 self.go_to_node("get_client_data", "Error al obtener los documentos del cliente")
         elif self.next_action == "restart":

@@ -5,10 +5,8 @@ import openpyxl
 from browser.chrome import ChromeBrowser
 from dateutil.relativedelta import relativedelta
 from files_and_folders.folders import Folder
-from openpyxl.reader.excel import load_workbook
 from robot_manager.base import Bot
 import pandas as pd
-from openpyxl.workbook import Workbook
 
 from robot.app import App
 from .flow import *
@@ -46,8 +44,8 @@ class Robot(Bot):
         """
 
         try:
-            self.tempFolder = "Z:\\temp"
-            self.workbook_path = "Z:\CLIENTES Y MAILS.xlsx"
+            self.tempFolder = "/Users/enriquecrespodebenito/PycharmProjects/automatizacion_descarga_Cofinanz/downloads"
+            self.workbook_path = "/Users/enriquecrespodebenito/PycharmProjects/automatizacion_descarga_Cofinanz/documents/listado clientes.xlsx"
             self.folder = Folder(self.tempFolder)
             self.folder.empty(allow_root=True)
             prev_month = datetime.now() - relativedelta(months=2)
@@ -67,6 +65,7 @@ class Robot(Bot):
                 "safebrowsing_for_trusted_sources_enabled": False,
                 "safebrowsing.enabled": False
             })
+            self.browser.options.add_argument('--ssl-client-cert-file=/Users/enriquecrespodebenito/PycharmProjects/automatizacion_descarga_Cofinanz/documents/Certificado MURRUTIA 17-09-2025.pfx')
             self.app = App(self.browser)
             self.app.login()
             self.data = pd.read_excel(self.workbook_path)
@@ -106,8 +105,9 @@ class Robot(Bot):
 
         """
         try:
-            self.nif = args[0].iloc[0]
-            self.name = args[0].iloc[1]
+            self.cod_cliente = args[0].iloc[0]
+            self.nif = args[0].iloc[1]
+            self.name = args[0].iloc[2]
             self.downloaded_documents = []
             self.log.debug(f"se va a procesar el {self.nif}")
             self.transaction_number = self.transaction_number + 1
@@ -120,6 +120,12 @@ class Robot(Bot):
             if len(tramites) == 0:
                 message = "No hay tramites para el usuario"
                 raise BusinessException(self, message=message, next_action="set_transaction_status")
+            self.folder.empty()
+            if len(self.folder.file_list(".pdf")) > 0:
+                time.sleep(30)
+                if len(self.folder.file_list(".pdf")) > 0:
+                    raise BusinessException("Error al borrar documentos de la carpeta")
+
             return tramites
 
         except BusinessException as BE:
@@ -127,7 +133,7 @@ class Robot(Bot):
             raise BE
         except Exception as e:
             self.log.system_exception("Error al obtener los documentos del cliente: Reintentando")
-            self.browser.get("https://ataria.ebizkaia.eus/es/mis-expedientes/")
+            self.browser.get("https://ataria.ebizkaia.eus/es/mis-presentaciones")
             raise SystemException(self, message=e, next_action="retry")
 
     @RobotFlow(Nodes.ConditionNode, children={True: "download_document", False: "set_transaction_status"},
@@ -158,9 +164,13 @@ class Robot(Bot):
             tramites = args[0]
             tramite = tramites[0]
 
-            self.folder.empty()
-            tax_info = self.app.obtener_informacion_impuesto(tramite)
-            self.log.trace("Modelo: " + str(tax_info["modelo"]))
+            self.app.descargar_documentos(tramite)
+
+
+
+            """
+            #tax_info = self.app.obtener_informacion_impuesto(tramite)
+            #self.log.trace("Modelo: " + str(tax_info["modelo"]))
             lista_modelos = [115, 123, 130, 303, 349, 140, 180, 184, 200, 347, 390, 391, 111, 110, 190]
             if tax_info["modelo"] not in lista_modelos:
                 raise BusinessException(self, message="El modelo no se encuentra en la lista de modelos", next_action="skip")
@@ -171,39 +181,39 @@ class Robot(Bot):
 
             if len(self.folder.file_list(".pdf")) == 0:
                 raise Exception("No se ha descargado el documento")
+            """
 
             file = self.folder.file_list(".pdf")[0]
 
+
             try:
-                impuesto = self.app.save_file(file, self.name, self.nif, tax_info["modelo"], tax_info["impuesto"] )
+                impuesto = self.app.save_file(file, self.name, self.nif, self.cod_cliente)
             except Exception as e:
                 self.log.system_exception(e)
                 raise Exception(e)
 
-            self.log.trace(impuesto[3])
-            self.app.go_back()
+            self.log.trace(impuesto[2])
+            #self.app.go_back()
 
             page = self.wb['IMPUESTOS']
-            page.append([self.nif, self.name, impuesto[0], impuesto[1], impuesto[2], impuesto[3]])
+            page.append([self.nif, self.name, impuesto[0], impuesto[1], impuesto[2]])
             self.wb.save(self.workbook_path)
             self.folder.empty()
             tramites.pop(0)
 
-            archivo = impuesto[3]
+            archivo = impuesto[2]
             self.downloaded_documents.append(archivo)
             return tramites
 
         except BusinessException as BE:
             self.log.business_exception(BE.message)
             tramites.pop(0)
-            self.app.go_back()
             raise BE
 
         except Exception as e:
             self.log.system_exception(e)
             try:
                 self.folder.empty(allow_root=True)
-                self.app.go_back()
             except:
                 raise SystemException(self, message=e, next_action="retry")
 

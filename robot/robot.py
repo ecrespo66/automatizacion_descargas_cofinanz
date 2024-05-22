@@ -198,10 +198,6 @@ class Robot(Bot):
         else:
             result = "OK"
             self.log.trace(result)
-
-            text = f"Estimado cliente:\nAdjunto se remite documentación contable PARA ARCHIVAR. Con la obligación de que sea guardada en forma impresa o en este formato (serecomienda las dos), para posible presentación ante: Organismos, Inspecciones, Bancos, etc.\nAtentamente."
-            #self.mail.send(["alicia@asesoriaheras.es", "arantza@asesoriaheras.es"], "ENVIO IMPUESTOS", text=text, files= self.downloaded_documents)
-
             # Selecciona la hoja en la que quieres buscar y actualizar
         hoja = self.wb['CLIENTES']
         # Dato que estás buscando
@@ -217,7 +213,7 @@ class Robot(Bot):
             hoja.cell(row=fila, column=7).value = result
             hoja.cell(row=fila, column=8).value = datetime.today().strftime("%d-%m-%y")
         # Guarda los cambios en el archivo
-        self.wb.save("Z:\CLIENTES Y MAILS.xlsx")
+        self.wb.save(INPUT_FILE)
         self.wb.close()
 
         self.data = self.data.drop(0)

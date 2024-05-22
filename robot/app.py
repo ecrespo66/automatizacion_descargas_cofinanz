@@ -3,11 +3,13 @@ import re
 import threading
 import time
 from datetime import datetime
-from pywinauto import Desktop
+#from pywinauto import Desktop
 from files_and_folders.files import File
 from files_and_folders.folders import Folder
 from files_and_folders.pdfs import PDF
 from selenium.webdriver import Keys, ActionChains
+
+from .constants import DOWNLOAD_FOLDER
 from .selectors import AppSelectors as AS
 
 
@@ -19,11 +21,11 @@ class App:
     def load_certificate(self, browser):
         time.sleep(10)
         # Crea un objeto Desktop para interactuar con la interfaz de usuario de Windows
-        desktop = Desktop(backend="uia")
-        main_window = desktop.window(title="Seleccionar un certificado", top_level_only=False, found_index=0)
-        main_window.wait('visible')
-        main_window.set_focus()
-        main_window.child_window(title="Aceptar", control_type="Button").click()
+        #desktop = Desktop(backend="uia")
+        #main_window = desktop.window(title="Seleccionar un certificado", top_level_only=False, found_index=0)
+        #main_window.wait('visible')
+        #main_window.set_focus()
+        #main_window.child_window(title="Aceptar", control_type="Button").click()
         actions = ActionChains(browser)
         actions.send_keys(Keys.ENTER)
         actions.perform()
@@ -268,29 +270,8 @@ class App:
                 periodo = f"{trimestre} trim "
 
         nombre_archivo = f"{nif} {cod_cliente} {modelo} {periodo} {ejercicio[-2:]}.pdf"
-        folder_path = f"/Users/enriquecrespodebenito/PycharmProjects/automatizacion_descarga_Cofinanz/CONTABLEFISCAL/CLIENTES/{cod_cliente}/IMPUESTOS/{ejercicio}/"
+        folder_path = DOWNLOAD_FOLDER + f"/CONTABLEFISCAL/CLIENTES/{cod_cliente}/IMPUESTOS/{ejercicio}/"
         Folder(folder_path)
         file.move(folder_path)
         file.rename(nombre_archivo)
-        """
-        #Si el archivo  existe
-        if File(folder_path + nombre_archivo).exists:
-              check = re.findall("(✔|✖)", pdf_text, re.IGNORECASE)
-              if len(check) > 0:
-                  if len(re.findall("sustitutiva", pdf_text, re.IGNORECASE)) > 0:
-                      nombre_archivo= nombre_archivo.replace(".pdf","SUSTITUTIVA.pdf")
-                      file.move(folder_path)
-                      file.rename(nombre_archivo)
-                  elif len(re.findall("complementaria", pdf_text, re.IGNORECASE)):
-                      nombre_archivo = nombre_archivo.replace(".pdf","_COMPLEMENTARIA.pdf")
-                      file.move(folder_path)
-                      file.rename(nombre_archivo)
-                  else:
-                      file = File(folder_path + nombre_archivo)
-              else:
-                  file = File(folder_path + nombre_archivo)
-        else:
-            file.move(folder_path)
-            file.rename(nombre_archivo)
-        """
         return (modelo, periodo, file.path)

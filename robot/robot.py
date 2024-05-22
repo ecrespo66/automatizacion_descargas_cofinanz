@@ -1,18 +1,13 @@
-import time
 from datetime import datetime
-
 import openpyxl
 from browser.chrome import ChromeBrowser
-from dateutil.relativedelta import relativedelta
 from files_and_folders.folders import Folder
 from robot_manager.base import Bot
 import pandas as pd
-
 from robot.app import App
+from .constants import *
 from .flow import *
 from .exceptions import *
-from .utils import last_day_of_month
-from email_activities.mails import Mail
 
 class Robot(Bot):
     """
@@ -21,7 +16,7 @@ class Robot(Bot):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs, disabled=True)
+        super().__init__(**kwargs, disabled=False)
         self.transaction_number = None
         self.data = None
         self.app = None
@@ -44,13 +39,12 @@ class Robot(Bot):
         """
 
         try:
-            self.tempFolder = "/Users/enriquecrespodebenito/PycharmProjects/automatizacion_descarga_Cofinanz/downloads"
-            self.workbook_path = "/Users/enriquecrespodebenito/PycharmProjects/automatizacion_descarga_Cofinanz/documents/listado clientes.xlsx"
+            self.tempFolder = TEMP_FOLDER
+            self.workbook_path = INPUT_FILE
             self.folder = Folder(self.tempFolder)
             self.folder.empty(allow_root=True)
-            prev_month = datetime.now() - relativedelta(months=2)
-            self.start_date = f"1/{prev_month.month}/{prev_month.year}" #datetime.strptime(self.parameters.get('date-from'), '%Y-%m-%d').strftime('%d/%m/%Y') # # #
-            self.end_date =  f"{last_day_of_month(prev_month.year, prev_month.month +1)}/{prev_month.month+1}/{prev_month.year}" #datetime.strptime(self.parameters.get('date-to'),  '%Y-%m-%d').strftime('%d/%m/%Y')  #
+            self.start_date = datetime.strptime(self.parameters.get('date-from'), '%Y-%m-%d').strftime('%d/%m/%Y')
+            self.end_date =  datetime.strptime(self.parameters.get('date-to'),  '%Y-%m-%d').strftime('%d/%m/%Y')
 
             self.log.trace(f"Se van a obtener los impuestos desde {self.start_date} hasta {self.end_date}")
             self.browser = ChromeBrowser(undetectable=True)
@@ -65,7 +59,6 @@ class Robot(Bot):
                 "safebrowsing_for_trusted_sources_enabled": False,
                 "safebrowsing.enabled": False
             })
-            self.browser.options.add_argument('--ssl-client-cert-file=/Users/enriquecrespodebenito/PycharmProjects/automatizacion_descarga_Cofinanz/documents/Certificado MURRUTIA 17-09-2025.pfx')
             self.app = App(self.browser)
             self.app.login()
             self.data = pd.read_excel(self.workbook_path)
@@ -165,27 +158,7 @@ class Robot(Bot):
             tramite = tramites[0]
 
             self.app.descargar_documentos(tramite)
-
-
-
-            """
-            #tax_info = self.app.obtener_informacion_impuesto(tramite)
-            #self.log.trace("Modelo: " + str(tax_info["modelo"]))
-            lista_modelos = [115, 123, 130, 303, 349, 140, 180, 184, 200, 347, 390, 391, 111, 110, 190]
-            if tax_info["modelo"] not in lista_modelos:
-                raise BusinessException(self, message="El modelo no se encuentra en la lista de modelos", next_action="skip")
-
-            if self.app.download_document() is not True:
-                raise BusinessException(self, message="No hay documentos a descargar", next_action="skip")
-            time.sleep(5)
-
-            if len(self.folder.file_list(".pdf")) == 0:
-                raise Exception("No se ha descargado el documento")
-            """
-
             file = self.folder.file_list(".pdf")[0]
-
-
             try:
                 impuesto = self.app.save_file(file, self.name, self.nif, self.cod_cliente)
             except Exception as e:
@@ -193,8 +166,6 @@ class Robot(Bot):
                 raise Exception(e)
 
             self.log.trace(impuesto[2])
-            #self.app.go_back()
-
             page = self.wb['IMPUESTOS']
             page.append([self.nif, self.name, impuesto[0], impuesto[1], impuesto[2]])
             self.wb.save(self.workbook_path)

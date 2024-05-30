@@ -7,7 +7,7 @@ from pywinauto import Desktop
 from files_and_folders.files import File
 from files_and_folders.folders import Folder
 from files_and_folders.pdfs import PDF
-from selenium.webdriver import Keys, ActionChains
+from selenium.webdriver import Keys
 
 from .constants import DOWNLOAD_FOLDER
 from .selectors import AppSelectors as AS
@@ -65,8 +65,7 @@ class App:
             return False
 
 
-    def obtener_tramistes(self):
-        return
+
 
     def descargar_documentos(self, i):
         self.browser.find_element('xpath',  f"//*[@id='form1:tablaPresentaciones:{i}:AccionPresentacion']").click()
@@ -172,11 +171,11 @@ class App:
                    "trimestral": [115, 130, 123, 303, 349, 110],
                    "anual": [140, 180, 184, 200, 347, 390, 391, 190]}
 
-        año = re.findall('Ejercicio([\s\S]+?)(202\d{1})', pdf_text)
+        año = re.findall(r'Ejercicio([\s\S]+?)(202\d{1})', pdf_text)
         if len(año) > 0:
             ejercicio = año[0][-1]
         else:
-            ejercicio = re.findall("(20\d{2})",pdf_text)[0]
+            ejercicio = re.findall(r"(20\d{2})",pdf_text)[0]
 
         #anual = re.findall(r'(>?Per[í|i]odo[\s\S]+?)(Anual)', pdf_text, re.IGNORECASE)
 
@@ -192,17 +191,15 @@ class App:
         else:
             mensual = re.findall(
                 r"(>?Per[í|i]odo[\s\S]+?)(ENERO|FEBR.|MARZO|ABRIL|MAYO|JUN.|JUL.|AGO.|SET.|OCT.|NOV.|DIC.)", pdf_text)
-            mensual_num = re.findall(f"(>?{ejercicio})\n(01|02|03|04|05|06|07|08|09|10|11|12)", pdf_text)
+            mensual_num = re.findall(rf"(>?{ejercicio})\n(01|02|03|04|05|06|07|08|09|10|11|12)", pdf_text)
             mensual_texto = re.findall(
-                "(Periodo\s)(.?)(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)",
+                r"(Periodo\s)(.?)(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)",
                 pdf_text, re.IGNORECASE)
-            trimestral = re.findall('(TRIM\d{1})', pdf_text)
+            trimestral = re.findall(r'(TRIM\d{1})', pdf_text)
 
             if len(trimestral) > 0:
                 trimestre = trimestral[0].replace("TRIM", "").strip()
                 periodo = f"{trimestre} trim "
-                #mes = f"{trimestre}T"
-                #nombre_archivo = f"{nif} {modelo} {periodo} {ejercicio[-2:]}.pdf"
 
             elif len(mensual) > 0:
                 month_list = {

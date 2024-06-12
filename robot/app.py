@@ -123,11 +123,16 @@ class App:
 
 
         impuesto = self.browser.find_element("xpath", AS.NOMBRE_IMPUESTO.value).text
-        modelo = self.browser.find_element("xpath", AS.MODELO_TEXTO.value).text
+        if "IRPF" in impuesto:
+            modelo = "IRPF"
+        else:
+            modelo = self.browser.find_element("xpath", AS.MODELO_TEXTO.value).text
+            match = re.findall("M[0-9]+", modelo)
+            modelo = int(match[0].replace("M", ""))
+
         fecha = self.browser.find_element("xpath", AS.FECHA_APERTURA.value).text
         fecha_apertura = datetime.strptime(fecha, "%d/%m/%Y")
-        match = re.findall("M[0-9]+", modelo)
-        modelo = int(match[0].replace("M", ""))
+
         return{"modelo": modelo, "impuesto": impuesto, "fecha_apertura": fecha_apertura}
 
     def download_document(self):
@@ -175,11 +180,11 @@ class App:
                    "trimestral": [115, 130, 123, 303, 349, 110],
                    "anual": [140, 180, 184, 200, 347, 390, 391, 190]}
 
-        año = re.findall('Ejercicio([\s\S]+?)(202\d{1})', pdf_text)
+        año = re.findall(r'Ejercicio([\s\S]+?)(202\d{1})', pdf_text)
         if len(año) > 0:
             ejercicio = año[0][-1]
         else:
-            ejercicio = re.findall("(20\d{2})",pdf_text)[0]
+            ejercicio = re.findall(r"(20\d{2})",pdf_text)[0]
 
         #anual = re.findall(r'(>?Per[í|i]odo[\s\S]+?)(Anual)', pdf_text, re.IGNORECASE)
 
@@ -195,9 +200,9 @@ class App:
         else:
             mensual = re.findall(
                 r"(>?Per[í|i]odo[\s\S]+?)(ENERO|FEBR.|MARZO|ABRIL|MAYO|JUN.|JUL.|AGO.|SET.|OCT.|NOV.|DIC.)", pdf_text)
-            mensual_num = re.findall(f"(>?{ejercicio})\n(01|02|03|04|05|06|07|08|09|10|11|12)", pdf_text)
+            mensual_num = re.findall(rf"(>?{ejercicio})\n(01|02|03|04|05|06|07|08|09|10|11|12)", pdf_text)
             mensual_texto = re.findall(
-                "(Periodo\s)(.?)(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)",
+                r"(Periodo\s)(.?)(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)",
                 pdf_text, re.IGNORECASE)
             trimestral = re.findall('(TRIM\d{1})', pdf_text)
 

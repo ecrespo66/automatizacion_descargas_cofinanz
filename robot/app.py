@@ -18,17 +18,13 @@ class App:
         self.browser = browser
 
     @classmethod
-    def load_certificate(self, browser):
-        time.sleep(10)
+    def load_certificate(self):
         # Crea un objeto Desktop para interactuar con la interfaz de usuario de Windows
         desktop = Desktop(backend="uia")
         main_window = desktop.window(title="Seleccionar un certificado", top_level_only=False, found_index=0)
         main_window.wait('visible')
         main_window.set_focus()
         main_window.child_window(title="Aceptar", control_type="Button").click()
-        actions = ActionChains(browser)
-        actions.send_keys(Keys.ENTER)
-        actions.perform()
 
 
     def login(self):
@@ -44,7 +40,6 @@ class App:
         self.browser.find_element('xpath', AS.MIS_PRESENTACIONES.value).click()
         self.browser.wait_for_element('xpath', AS.CERTIFICADOS_DIGITALES.value, 120)
         thread = threading.Thread(target=self.load_certificate, daemon=True)
-        time.sleep(30)
         thread.start()
         thread.join(timeout=60)
         # self.load_certificate()

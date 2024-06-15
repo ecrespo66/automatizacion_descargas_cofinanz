@@ -42,9 +42,11 @@ class App:
         self.browser.find_element('xpath', AS.MIS_GESTIONES.value).click()
         self.browser.wait_for_element('xpath', AS.MIS_PRESENTACIONES.value)
         self.browser.find_element('xpath', AS.MIS_PRESENTACIONES.value).click()
-        self.browser.wait_for_element('xpath', AS.CERTIFICADOS_DIGITALES.value, 20)
-        thread = threading.Thread(target=self.load_certificate,args=(self.browser,) )
+        self.browser.wait_for_element('xpath', AS.CERTIFICADOS_DIGITALES.value, 120)
+        thread = threading.Thread(target=self.load_certificate, daemon=True)
+        time.sleep(30)
         thread.start()
+        thread.join(timeout=60)
         # self.load_certificate()
         self.browser.find_element('xpath', AS.CERTIFICADOS_DIGITALES.value).click()
 
@@ -53,11 +55,8 @@ class App:
         self.browser.wait_for_element('xpath', AS.INPUT_SELECTOR.value, 60)
         self.browser.find_element("xpath", AS.INPUT_SELECTOR.value).click()
         self.browser.find_element("xpath", AS.INPUT_SELECTOR.value).send_keys(Keys.COMMAND + "a")
-
         self.browser.find_element("xpath", AS.INPUT_SELECTOR.value).clear()
-
         self.browser.find_element("xpath", AS.INPUT_SELECTOR.value).send_keys(nif)
-
         CLIENT_SELECTOR = f"//span[contains(text(),'{nif}')]"
 
         try:
@@ -114,7 +113,6 @@ class App:
 
 
 
-
     def obtener_informacion_impuesto(self, tramite):
         self.browser.wait_for_element_to_be_clickable('xpath', AS.TRAMITES.value, 10)
         self.browser.find_elements('xpath', AS.TRAMITES.value)[tramite].click()
@@ -127,7 +125,7 @@ class App:
             modelo = "IRPF"
         else:
             modelo = self.browser.find_element("xpath", AS.MODELO_TEXTO.value).text
-            match = re.findall("M[0-9]+", modelo)
+            match = re.findall(f"M[0-9]+", modelo)
             modelo = int(match[0].replace("M", ""))
 
         fecha = self.browser.find_element("xpath", AS.FECHA_APERTURA.value).text
@@ -152,7 +150,6 @@ class App:
             download_button.click()
         else:
             return 'No hay resultados'
-            #self.browser.find_elements('xpath', AS.BOTON_DESCARGA.value)[3].click()
         return True
 
 
@@ -185,12 +182,6 @@ class App:
             ejercicio = año[0][-1]
         else:
             ejercicio = re.findall(r"(20\d{2})",pdf_text)[0]
-
-        #anual = re.findall(r'(>?Per[í|i]odo[\s\S]+?)(Anual)', pdf_text, re.IGNORECASE)
-
-        # Declaraciones complementarias y sustitutivas
-
-
         nombre_documento = nombre[0:50]
 
         if modelo in modelos["anual"]:
@@ -204,13 +195,11 @@ class App:
             mensual_texto = re.findall(
                 r"(Periodo\s)(.?)(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)",
                 pdf_text, re.IGNORECASE)
-            trimestral = re.findall('(TRIM\d{1})', pdf_text)
+            trimestral = re.findall(r'(TRIM\d{1})', pdf_text)
 
             if len(trimestral) > 0:
                 trimestre = trimestral[0].replace("TRIM", "").strip()
                 periodo = f"{trimestre} trim "
-                #mes = f"{trimestre}T"
-                #nombre_archivo = f"{nif} {modelo} {periodo} {ejercicio[-2:]}.pdf"
 
             elif len(mensual) > 0:
                 month_list = {
@@ -237,7 +226,6 @@ class App:
                     mes = '0' + str(mes)
 
                 periodo = f"{trimestre}º TRIM. {ejercicio}"
-                nombre_archivo = f"{nif} {modelo}  {periodo} {ejercicio}.pdf"
 
             elif len(mensual_num) > 0:
                 mes = mensual_num[0][-1]
@@ -245,9 +233,7 @@ class App:
 
                 if len(str(mes)) == 1:
                     mes = '0' + str(mes)
-
                 periodo = f"{trimestre} trim"
-                #nombre_archivo = f"{nif} {modelo} {periodo} {ejercicio[-2:]}.pdf"
 
             elif len(mensual_texto) > 0:
                 meses_dict = {

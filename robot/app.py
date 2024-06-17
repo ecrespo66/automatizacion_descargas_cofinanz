@@ -16,6 +16,8 @@ from .selectors import AppSelectors as AS
 class App:
     def __init__(self, browser):
         self.browser = browser
+        self.exception_event = threading.Event()
+        self.exception = None
 
 
     @classmethod

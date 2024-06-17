@@ -16,7 +16,7 @@ class Robot(Bot):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs, disabled=False)
+        super().__init__(**kwargs, disabled=True)
         self.transaction_number = None
         self.data = None
         self.app = None
@@ -43,8 +43,10 @@ class Robot(Bot):
             self.workbook_path = INPUT_FILE
             self.folder = Folder(self.tempFolder)
             self.folder.empty(allow_root=True)
-            self.start_date = datetime.strptime(self.parameters.get('date-from'), '%Y-%m-%d').strftime('%d/%m/%Y')
-            self.end_date =  datetime.strptime(self.parameters.get('date-to'),  '%Y-%m-%d').strftime('%d/%m/%Y')
+            self.start_date = "01/01/2024"
+            #datetime.strptime(self.parameters.get('date-from'), '%Y-%m-%d').strftime('%d/%m/%Y')
+            self.end_date = "15/06/2024"
+            #datetime.strptime(self.parameters.get('date-to'),  '%Y-%m-%d').strftime('%d/%m/%Y')
 
             self.log.trace(f"Se van a obtener los impuestos desde {self.start_date} hasta {self.end_date}")
             self.browser = ChromeBrowser(undetectable=True)
@@ -118,7 +120,6 @@ class Robot(Bot):
                 time.sleep(30)
                 if len(self.folder.file_list(".pdf")) > 0:
                     raise BusinessException("Error al borrar documentos de la carpeta")
-
             return tramites
 
         except BusinessException as BE:
@@ -158,7 +159,13 @@ class Robot(Bot):
             tramite = tramites[0]
 
             self.app.descargar_documentos(tramite)
-            file = self.folder.file_list(".pdf")[0]
+            if len(self.folder.file_list(".pdf")) == 0:
+                if len(self.folder.file_list(".PDF")) == 0:
+                    raise SystemException(self, message="No se puede descargar el documento", next_action="retry")
+                else:
+                    file = self.folder.file_list(".PDF")[0]
+            else:
+                file = self.folder.file_list(".pdf")[0]
             try:
                 impuesto = self.app.save_file(file, self.name, self.nif, self.cod_cliente)
             except Exception as e:
@@ -187,7 +194,6 @@ class Robot(Bot):
                 self.folder.empty(allow_root=True)
             except:
                 raise SystemException(self, message=e, next_action="retry")
-
             raise SystemException(self, message=e, next_action="retry")
 
     @RobotFlow(Nodes.OperationNode, children="get_client_data")

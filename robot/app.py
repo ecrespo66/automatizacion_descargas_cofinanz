@@ -162,7 +162,7 @@ class App:
         if len(modelo) >0:
             modelo = modelo[0]
         else:
-            raise Exception("No se localiza el modelo en el documento")
+            raise Exception("No se localiza el modelo en el documento: " + nombre)
 
         if not nif in pdf_text:
             raise Exception("El nif No coincide con el documento")
@@ -183,7 +183,7 @@ class App:
 
         else:
             mensual = re.findall(
-                r"(>?Per[í|i]odo[\s\S]+?)(ENERO|FEBR.|MARZO|ABRIL|MAYO|JUN.|JUL.|AGO.|SET.|OCT.|NOV.|DIC.)", pdf_text)
+                r"(>?Per[í|i]odo[\s\S]+?)(ENERO|FEBR.|MARZO|ABRIL|MAYO|JUN.|JUL.|AGO.|SEP.|OCT.|NOV.|DIC.)", pdf_text)
             mensual_num = re.findall(rf"(>?{ejercicio})\n(01|02|03|04|05|06|07|08|09|10|11|12)", pdf_text)
             mensual_texto = re.findall(
                 r"(Periodo\s)(.?)(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)",

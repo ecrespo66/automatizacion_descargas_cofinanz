@@ -3,7 +3,7 @@ import re
 import threading
 import time
 from datetime import datetime
-#from pywinauto import Desktop
+from pywinauto import Desktop
 from files_and_folders.files import File
 from files_and_folders.folders import Folder
 from files_and_folders.pdfs import PDF

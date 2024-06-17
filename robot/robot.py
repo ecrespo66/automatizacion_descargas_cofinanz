@@ -16,7 +16,7 @@ class Robot(Bot):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs, disabled=False)
+        super().__init__(**kwargs, disabled=True)
         self.transaction_number = None
         self.data = None
         self.app = None
@@ -43,9 +43,12 @@ class Robot(Bot):
             self.workbook_path = INPUT_FILE
             self.folder = Folder(self.tempFolder)
             self.folder.empty(allow_root=True)
-            self.start_date = datetime.strptime(self.parameters.get('date-from'), '%Y-%m-%d').strftime('%d/%m/%Y')
-            self.end_date = datetime.strptime(self.parameters.get('date-to'),  '%Y-%m-%d').strftime('%d/%m/%Y')
-
+            try:
+                self.start_date = datetime.strptime(self.parameters.get('date-from'), '%Y-%m-%d').strftime('%d/%m/%Y')
+                self.end_date = datetime.strptime(self.parameters.get('date-to'),  '%Y-%m-%d').strftime('%d/%m/%Y')
+            except:
+                self.start_date = datetime.now().strftime('%d/%m/%Y')
+                self.end_date = datetime.now().strftime('%d/%m/%Y')
             self.log.trace(f"Se van a obtener los impuestos desde {self.start_date} hasta {self.end_date}")
             self.browser = ChromeBrowser(undetectable=True)
             self.browser.options.page_load_strategy = "normal"

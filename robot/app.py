@@ -3,7 +3,7 @@ import re
 import threading
 import time
 from datetime import datetime
-from pywinauto import Desktop
+#from pywinauto import Desktop
 from files_and_folders.files import File
 from files_and_folders.folders import Folder
 from files_and_folders.pdfs import PDF
@@ -17,6 +17,7 @@ class App:
     def __init__(self, browser):
         self.browser = browser
 
+    """
     @classmethod
     def load_certificate(self):
         time.sleep(30)
@@ -26,7 +27,7 @@ class App:
         main_window.wait('visible')
         main_window.set_focus()
         main_window.child_window(title="Aceptar", control_type="Button").click()
-
+    """
 
     def login(self):
 
@@ -40,12 +41,12 @@ class App:
         self.browser.wait_for_element('xpath', AS.MIS_PRESENTACIONES.value)
         self.browser.find_element('xpath', AS.MIS_PRESENTACIONES.value).click()
         self.browser.wait_for_element('xpath', AS.CERTIFICADOS_DIGITALES.value, 120)
-        thread = threading.Thread(target=self.load_certificate, daemon=True)
-        thread.start()
+        #thread = threading.Thread(target=self.load_certificate, daemon=True)
+        #thread.start()
         # self.load_certificate()
-        self.browser.find_element('xpath', AS.CERTIFICADOS_DIGITALES.value).click()
-        thread.join(timeout=60)
-
+        #self.browser.find_element('xpath', AS.CERTIFICADOS_DIGITALES.value).click()
+        #thread.join(timeout=60)
+        time.sleep(1)
     def find_client(self, nif):
 
         self.browser.wait_for_element('xpath', AS.INPUT_SELECTOR.value, 60)

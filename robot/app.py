@@ -3,7 +3,7 @@ import re
 import threading
 import time
 from datetime import datetime
-#from pywinauto import Desktop
+from pywinauto import Desktop
 from files_and_folders.files import File
 from files_and_folders.folders import Folder
 from files_and_folders.pdfs import PDF
@@ -16,7 +16,7 @@ from .selectors import AppSelectors as AS
 class App:
     def __init__(self, browser):
         self.browser = browser
-    """
+
     @classmethod
     def load_certificate(self):
         time.sleep(10)
@@ -26,7 +26,7 @@ class App:
         main_window.wait('visible')
         main_window.set_focus()
         main_window.child_window(title="Aceptar", control_type="Button").click()
-    """
+
 
     def login(self):
 
@@ -35,17 +35,17 @@ class App:
 
         if self.browser.element_exists('xpath', AS.ACEPTAR_COOKIES.value):
             self.browser.find_element('xpath', AS.ACEPTAR_COOKIES.value).click()
-        self.browser.wait_for_element('xpath', AS.MIS_GESTIONES.value)
+        self.browser.wait_for_element('xpath', AS.MIS_GESTIONES.value, 120)
         self.browser.find_element('xpath', AS.MIS_GESTIONES.value).click()
         self.browser.wait_for_element('xpath', AS.MIS_PRESENTACIONES.value)
         self.browser.find_element('xpath', AS.MIS_PRESENTACIONES.value).click()
         self.browser.wait_for_element('xpath', AS.CERTIFICADOS_DIGITALES.value, 120)
-        #thread = threading.Thread(target=self.load_certificate, daemon=True)
-        #thread.start()
+        thread = threading.Thread(target=self.load_certificate, daemon=True)
+        thread.start()
         # self.load_certificate()
         self.browser.find_element('xpath', AS.CERTIFICADOS_DIGITALES.value).click()
-        #thread.join(timeout=60)
-        time.sleep(1)
+        thread.join(timeout=60)
+
     def find_client(self, nif):
 
         self.browser.wait_for_element('xpath', AS.INPUT_SELECTOR.value, 60)
@@ -254,15 +254,15 @@ class App:
                     mes = '0' + str(mes)
                 periodo = f"{trimestre} trim "
 
-        folder_path = DOWNLOAD_FOLDER + f"//{cod_cliente}//IMPUESTOS/{ejercicio}"
+        folder_path = DOWNLOAD_FOLDER + f"\\{cod_cliente}\\IMPUESTOS\\{ejercicio}\\"
         Folder(folder_path)
 
         nombre_archivo = f"{nif} {cod_cliente} {modelo} {periodo} {ejercicio[-2:]}.pdf"
         file.rename(nombre_archivo)
         Folder(COMMON_FOLDER)
-        if not File(COMMON_FOLDER +"/" + nombre_archivo).exists:
+        if not File(COMMON_FOLDER +"\\" + nombre_archivo).exists:
             file.copy(new_location=COMMON_FOLDER)
-        if not File(folder_path  +"/" + nombre_archivo).exists:
+        if not File(folder_path  +"\\" + nombre_archivo).exists:
             file.move(folder_path)
 
         return (modelo, periodo, file.path)

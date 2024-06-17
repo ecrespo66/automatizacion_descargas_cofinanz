@@ -17,7 +17,7 @@ class App:
     def __init__(self, browser):
         self.browser = browser
 
-    """
+
     @classmethod
     def load_certificate(self):
         time.sleep(30)
@@ -27,7 +27,7 @@ class App:
         main_window.wait('visible')
         main_window.set_focus()
         main_window.child_window(title="Aceptar", control_type="Button").click()
-    """
+
 
     def login(self):
 
@@ -41,12 +41,11 @@ class App:
         self.browser.wait_for_element('xpath', AS.MIS_PRESENTACIONES.value)
         self.browser.find_element('xpath', AS.MIS_PRESENTACIONES.value).click()
         self.browser.wait_for_element('xpath', AS.CERTIFICADOS_DIGITALES.value, 120)
-        #thread = threading.Thread(target=self.load_certificate, daemon=True)
-        #thread.start()
-        # self.load_certificate()
-        #self.browser.find_element('xpath', AS.CERTIFICADOS_DIGITALES.value).click()
-        #thread.join(timeout=60)
-        time.sleep(1)
+        thread = threading.Thread(target=self.load_certificate, daemon=True)
+        thread.start()
+        self.browser.find_element('xpath', AS.CERTIFICADOS_DIGITALES.value).click()
+        thread.join(timeout=60)
+
     def find_client(self, nif):
 
         self.browser.wait_for_element('xpath', AS.INPUT_SELECTOR.value, 60)
@@ -177,7 +176,6 @@ class App:
             ejercicio = año[0][-1]
         else:
             ejercicio = re.findall(r"(20\d{2})",pdf_text)[0]
-        nombre_documento = nombre[0:50]
 
         if modelo in modelos["anual"]:
             #anual = re.findall(r'(>?Per[í|i]odo[\s\S]+?)(Anual)', pdf_text, re.IGNORECASE)
@@ -202,7 +200,7 @@ class App:
                     'FEBR.': 2,
                     'MARZO': 3,
                     'ABRIL': 4,
-                    'MAY0': 5,
+                    'MAYO': 5,
                     'JUN.': 6,
                     'JUL.': 7,
                     'AGO.': 8,

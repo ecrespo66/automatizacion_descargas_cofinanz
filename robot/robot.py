@@ -16,7 +16,7 @@ class Robot(Bot):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs, disabled=True)
+        super().__init__(**kwargs, disabled=False)
         self.transaction_number = None
         self.data = None
         self.app = None
@@ -177,6 +177,7 @@ class Robot(Bot):
             page = self.wb['IMPUESTOS']
             page.append([self.nif, self.name, impuesto[0], impuesto[1], impuesto[2]])
             self.wb.save(self.workbook_path)
+            self.wb.close()
             self.folder.empty()
             tramites.pop(0)
 

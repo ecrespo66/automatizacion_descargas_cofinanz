@@ -20,7 +20,6 @@ class App:
         self.exception = None
 
 
-    @classmethod
     def load_certificate(self):
         time.sleep(30)
         # Crea un objeto Desktop para interactuar con la interfaz de usuario de Windows

@@ -5,6 +5,6 @@
 
 
 TEMP_FOLDER = "C:\\Robot\\Downloads\\CONTABLEFISCAL\\TEMP"
-INPUT_FILE = "C:\\Robot\\Downloads\\COMUNES\\IMPUESTOS DIAMAWEB\\listado clientes.xlsx"
+INPUT_FILE = "C:\\Users\\Administrador\\Documents\\listado clientes.xlsx"
 DOWNLOAD_FOLDER = "C:\\Robot\\Downloads\\CONTABLEFISCAL\\CLIENTES"
 COMMON_FOLDER = "C:\\Robot\\Downloads\\COMUNES\\IMPUESTOS DIAMAWEB"

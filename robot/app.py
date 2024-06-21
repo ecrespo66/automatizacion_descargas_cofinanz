@@ -3,7 +3,7 @@ import re
 import threading
 import time
 from datetime import datetime
-from pywinauto import Desktop
+#from pywinauto import Desktop
 from files_and_folders.files import File
 from files_and_folders.folders import Folder
 from files_and_folders.pdfs import PDF
@@ -19,7 +19,7 @@ class App:
         self.exception_event = threading.Event()
         self.exception = None
 
-
+    """
     def load_certificate(self):
         time.sleep(30)
         # Crea un objeto Desktop para interactuar con la interfaz de usuario de Windows
@@ -32,6 +32,7 @@ class App:
         except Exception as e:
             self.exception = e
             self.exception_event.set()
+    """
 
     def login(self):
 
@@ -45,10 +46,11 @@ class App:
         self.browser.wait_for_element('xpath', AS.MIS_PRESENTACIONES.value)
         self.browser.find_element('xpath', AS.MIS_PRESENTACIONES.value).click()
         self.browser.wait_for_element('xpath', AS.CERTIFICADOS_DIGITALES.value, 120)
-        thread = threading.Thread(target=self.load_certificate, daemon=True)
-        thread.start()
+        #thread = threading.Thread(target=self.load_certificate, daemon=True)
+        #thread.start()
         self.browser.find_element('xpath', AS.CERTIFICADOS_DIGITALES.value).click()
-        thread.join(timeout=60)
+        #thread.join(timeout=60)
+        time.sleep(1)
 
         # Check if an exception was set
         if self.exception_event.is_set():
@@ -165,111 +167,172 @@ class App:
         pdf = PDF(file.path)
         pdf_text = pdf.read_pdf()
         periodo = ""
-        modelo = re.findall(r"Modelo (\d{3})", pdf_text)
 
+        #Buscamos en modelo en el documento
+        modelo = re.findall(r"Modelo (\d{3})", pdf_text)
         if len(modelo) >0:
-            modelo = modelo[0]
+            modelo = int(modelo[0])
         else:
-            raise Exception("No se localiza el modelo en el documento: " + nombre)
+            raise NameError("No se localiza el modelo en el documento")
 
         if not nif in pdf_text:
             raise Exception("El nif No coincide con el documento")
 
-        modelos = {"mensual": [115, 123, 303, 349, 111],
-                   "trimestral": [115, 130, 123, 303, 349, 110],
-                   "anual": [140, 180, 184, 200, 347, 390, 391, 190]}
+        modelos = {"mensual": [ 111],
+                   "mensual/trimestral":[115,123,303,349,216,309],
+                   "trimestral": [130,110],
+                   "anual": [190,140,180,184,200,220,390,347,232,296, 345]}
 
+
+        #Buscamos en ejercicio en el documento
         año = re.findall(r'Ejercicio([\s\S]+?)(202\d{1})', pdf_text)
         if len(año) > 0:
             ejercicio = año[0][-1]
         else:
-            ejercicio = re.findall(r"(20\d{2})",pdf_text)[0]
+            ejercicio = re.findall(r"(20\d{2})", pdf_text)[0]
 
+
+        #Si el modelo está entre los modelos anuales
         if modelo in modelos["anual"]:
-            #anual = re.findall(r'(>?Per[í|i]odo[\s\S]+?)(Anual)', pdf_text, re.IGNORECASE)
             nombre_archivo = f"{nif} {modelo} {ejercicio[-2:]}.pdf"
 
-        else:
+        #Si el modelo e mensual
+        elif modelo in modelos["mensual"]:
             mensual = re.findall(
-                r"(>?Per[í|i]odo[\s\S]+?)(ENERO|FEBR.|MARZO|ABRIL|MAYO|JUN.|JUL.|AGO.|SEP.|OCT.|NOV.|DIC.)", pdf_text)
+                r"(>?Per[í|i]odo[\s\S]+?)(ENERO|FEBR.|MARZO|ABRIL|MAYO|JUN.|JUL.|AGO.|SET.|OCT.|NOV.|DIC.)", pdf_text)
+
+            mensual_num = re.findall(rf"(>?{ejercicio})\n(01|02|03|04|05|06|07|08|09|10|11|12)", pdf_text)
+            mensual_texto = re.findall(
+                r"(Periodo\s)(.?)(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)",
+                pdf_text, re.IGNORECASE)
+
+            if len(mensual) > 0:
+                month_list = {
+                'ENERO': 'enero',
+                'FEBR.': 'febrero',
+                'MARZO': 'marzo',
+                'ABRIL': 'abril',
+                'MAYO': 'mayo',
+                'JUN.': 'junio',
+                'JUL.': 'julio',
+                'AGO.': 'agosto',
+                'SET.': 'septiembre',
+                'OCT.': 'octubre',
+                'NOV.': 'noviembre',
+                'DIC.': 'diciembre'
+            }
+                try:
+                    mes = month_list[mensual[0][-1]]
+                except:
+                    mes = month_list[mensual[-1][-1]]
+            elif len(mensual_num) > 0:
+                month_list = {
+                    '01': 'enero',
+                    '02.': 'febrero',
+                    '03': 'marzo',
+                    '04': 'abril',
+                    '05': 'mayo',
+                    '06': 'junio',
+                    '07': 'julio',
+                    '08': 'agosto',
+                    '09': 'septiembre',
+                    '10': 'octubre',
+                    '11': 'noviembre',
+                    '12': 'diciembre'
+                }
+                mes = month_list[mensual_num[0][-1]]
+
+            elif len(mensual_texto) > 0:
+                try:
+                    mes = mensual_texto[0][-1]
+                except:
+                    mes = mensual_texto[-1][-1]
+            nombre_archivo = f"{nif} {modelo} {mes} {ejercicio[-2:]}.pdf"
+
+        #Si el modelo es trimestral
+        elif modelo in modelos["trimestral"]:
+            trimestral = re.findall(r'(TRIM\d{1})', pdf_text)
+            if len(trimestral) > 0:
+                trimestre = trimestral[0].replace("TRIM", "").strip()
+                trimestre = f"{trimestre}º trimestre"
+                nombre_archivo = f"{nif} {modelo} {trimestre} {ejercicio[-2:]}.pdf"
+            else:
+                raise Exception("No se localiza el trimestre")
+
+        elif modelo in modelos["mensual/trimestral"]:
+            mensual = re.findall(
+                r"(>?Per[í|i]odo[\s\S]+?)(ENERO|FEBR.|MARZO|ABRIL|MAYO|JUN.|JUL.|AGO.|SET.|OCT.|NOV.|DIC.)", pdf_text)
+
             mensual_num = re.findall(rf"(>?{ejercicio})\n(01|02|03|04|05|06|07|08|09|10|11|12)", pdf_text)
             mensual_texto = re.findall(
                 r"(Periodo\s)(.?)(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)",
                 pdf_text, re.IGNORECASE)
             trimestral = re.findall(r'(TRIM\d{1})', pdf_text)
 
+
             if len(trimestral) > 0:
                 trimestre = trimestral[0].replace("TRIM", "").strip()
-                periodo = f"{trimestre} trim "
-
+                periodo = f"{trimestre}º trimestre"
             elif len(mensual) > 0:
                 month_list = {
-                    'ENERO': 1,
-                    'FEBR.': 2,
-                    'MARZO': 3,
-                    'ABRIL': 4,
-                    'MAYO': 5,
-                    'JUN.': 6,
-                    'JUL.': 7,
-                    'AGO.': 8,
-                    'SEP.': 9,
-                    'OCT.': 10,
-                    'NOV.': 11,
-                    'DIC.': 12
-                }
+                'ENERO': 'enero',
+                'FEBR.': 'febrero',
+                'MARZO': 'marzo',
+                'ABRIL': 'abril',
+                'MAYO': 'mayo',
+                'JUN.': 'junio',
+                'JUL.': 'julio',
+                'AGO.': 'agosto',
+                'SET.': 'septiembre',
+                'OCT.': 'octubre',
+                'NOV.': 'noviembre',
+                'DIC.': 'diciembre'
+            }
                 try:
-                    mes = month_list[mensual[0][-1]]
+                    periodo = month_list[mensual[0][-1]]
                 except:
-                    mes = month_list[mensual[-1][-1]]
-                trimestre = math.ceil(mes / 3)
-
-                if len(str(mes)) == 1:
-                    mes = '0' + str(mes)
-
-                periodo = f"{trimestre}º TRIM. {ejercicio}"
-
+                    periodo = month_list[mensual[-1][-1]]
             elif len(mensual_num) > 0:
-                mes = mensual_num[0][-1]
-                trimestre = math.ceil(mes / 3)
-
-                if len(str(mes)) == 1:
-                    mes = '0' + str(mes)
-                periodo = f"{trimestre} trim"
-
-            elif len(mensual_texto) > 0:
-                meses_dict = {
-                    'ENERO': 1,
-                    'FEBRERO': 2,
-                    'MARZO': 3,
-                    'ABRIL': 4,
-                    'MAYO': 5,
-                    'JUNIO': 6,
-                    'JULIO': 7,
-                    'AGOSTO': 8,
-                    'SEPTIEMBRE': 9,
-                    'OCTUBRE': 10,
-                    'NOVIEMBRE': 11,
-                    'DICIEMBRE': 12
+                month_list = {
+                    '01': 'enero',
+                    '02.': 'febrero',
+                    '03': 'marzo',
+                    '04': 'abril',
+                    '05': 'mayo',
+                    '06': 'junio',
+                    '07': 'julio',
+                    '08': 'agosto',
+                    '09': 'septiembre',
+                    '10': 'octubre',
+                    '11': 'noviembre',
+                    '12': 'diciembre'
                 }
+                periodo = month_list[mensual_num[0][-1]]
+            elif len(mensual_texto) > 0:
                 try:
-                    mes = meses_dict[mensual_texto[0][-1].upper()]
+                    periodo = mensual_texto[0][-1]
                 except:
-                    mes = meses_dict[mensual_texto[-1][-1].upper()]
-                trimestre = math.ceil(mes / 3)
+                    periodo = mensual_texto[-1][-1]
+            else:
+                raise NameError("No se localiza el Periodo en el documento")
 
-                if len(str(mes)) == 1:
-                    mes = '0' + str(mes)
-                periodo = f"{trimestre} trim "
+            nombre_archivo = f"{nif} {modelo} {periodo} {ejercicio[-2:]}.pdf"
 
-        folder_path = DOWNLOAD_FOLDER + f"\\{cod_cliente}\\IMPUESTOS\\{ejercicio}\\"
-        Folder(folder_path)
 
-        nombre_archivo = f"{nif} {cod_cliente} {modelo} {periodo} {ejercicio[-2:]}.pdf"
+        else:
+            raise NameError("El modelo no se encuentra en la lista de modelos")
+
+
+        folder_path = DOWNLOAD_FOLDER + f"\\{cod_cliente}/IMPUESTOS\\{ejercicio}"
+        #Folder(folder_path)
+
+
         file.rename(nombre_archivo)
         Folder(COMMON_FOLDER)
         if not File(COMMON_FOLDER +"\\" + nombre_archivo).exists:
-            file.copy(new_location=COMMON_FOLDER)
-        if not File(folder_path  +"\\" + nombre_archivo).exists:
-            file.move(folder_path)
-
+            #file.move(folder_path)
+            file.move(COMMON_FOLDER)
+        #if not File(folder_path  +"\\" + nombre_archivo).exists:
+        #    #file.move(folder_path)
+        #    print(folder_path  +"\\" + nombre_archivo)
         return (modelo, periodo, file.path)

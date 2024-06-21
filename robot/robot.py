@@ -1,3 +1,4 @@
+import math
 from datetime import datetime
 import openpyxl
 from browser.chrome import ChromeBrowser
@@ -85,6 +86,8 @@ class Robot(Bot):
             return []
         return self.data.iloc[0]
 
+
+
     @RobotFlow(Nodes.OperationNode, children="process_documents")
     def get_client_documents(self, *args):
         """
@@ -107,6 +110,7 @@ class Robot(Bot):
             self.downloaded_documents = []
             self.log.debug(f"se va a procesar el {self.nif}")
             self.transaction_number = self.transaction_number + 1
+            self.current_page =1
 
             if self.app.find_client(self.nif) is False:
                 message = f"No se encuentra el usuario {self.nif}"
@@ -117,10 +121,12 @@ class Robot(Bot):
                 message = "No hay tramites para el usuario"
                 raise BusinessException(self, message=message, next_action="set_transaction_status")
             self.folder.empty()
+            #Si
             if len(self.folder.file_list(".pdf")) > 0:
+                self.folder.empty()
                 time.sleep(30)
                 if len(self.folder.file_list(".pdf")) > 0:
-                    raise BusinessException("Error al borrar documentos de la carpeta")
+                    raise BusinessException(self, message="Error al borrar documentos de la carpeta", next_action="retry")
             return tramites
 
         except BusinessException as BE:
@@ -131,7 +137,7 @@ class Robot(Bot):
             self.browser.get("https://ataria.ebizkaia.eus/es/mis-presentaciones")
             raise SystemException(self, message=e, next_action="retry")
 
-    @RobotFlow(Nodes.ConditionNode, children={True: "download_document", False: "set_transaction_status"},
+    @RobotFlow(Nodes.ConditionNode, children={True: "download_document",False: "set_transaction_status"},
                condition=Conditions.has_data)
     def process_documents(self, *args):
         """
@@ -141,6 +147,15 @@ class Robot(Bot):
         """
         if args:
             tramites = args[0]
+            if len(tramites) > 0:
+                if math.ceil((tramites[0]+1)/10) > self.current_page:
+                    try:
+                        self.browser.find_element(by="xpath",
+                                              value="//*[@class='ui-paginator-next ui-state-default ui-corner-all']").click()
+                        self.current_page += 1
+                        time.sleep(10)
+                    except Exception as e:
+                        raise SystemException(self, message=e, next_action="retry")
             return tramites
         else:
             return []
@@ -169,9 +184,12 @@ class Robot(Bot):
                 file = self.folder.file_list(".pdf")[0]
             try:
                 impuesto = self.app.save_file(file, self.name, self.nif, self.cod_cliente)
+
+
+            except NameError as e:
+                raise BusinessException(self, message=e, next_action="skip")
             except Exception as e:
-                self.log.system_exception(e)
-                raise Exception(e)
+                raise e
 
             self.log.trace(impuesto[2])
             page = self.wb['IMPUESTOS']
@@ -186,6 +204,10 @@ class Robot(Bot):
             return tramites
 
         except BusinessException as BE:
+            try:
+                self.folder.empty(allow_root=True)
+            except:
+                raise SystemException(self, message=e, next_action="retry")
             self.log.business_exception(BE.message)
             tramites.pop(0)
             raise BE

@@ -3,7 +3,7 @@ import re
 import threading
 import time
 from datetime import datetime
-#from pywinauto import Desktop
+from pywinauto import Desktop
 from files_and_folders.files import File
 from files_and_folders.folders import Folder
 from files_and_folders.pdfs import PDF
@@ -19,7 +19,7 @@ class App:
         self.exception_event = threading.Event()
         self.exception = None
 
-    """
+
     def load_certificate(self):
         time.sleep(30)
         # Crea un objeto Desktop para interactuar con la interfaz de usuario de Windows
@@ -32,7 +32,7 @@ class App:
         except Exception as e:
             self.exception = e
             self.exception_event.set()
-    """
+
 
     def login(self):
 
@@ -46,11 +46,11 @@ class App:
         self.browser.wait_for_element('xpath', AS.MIS_PRESENTACIONES.value)
         self.browser.find_element('xpath', AS.MIS_PRESENTACIONES.value).click()
         self.browser.wait_for_element('xpath', AS.CERTIFICADOS_DIGITALES.value, 120)
-        #thread = threading.Thread(target=self.load_certificate, daemon=True)
-        #thread.start()
+        thread = threading.Thread(target=self.load_certificate, daemon=True)
+        thread.start()
         self.browser.find_element('xpath', AS.CERTIFICADOS_DIGITALES.value).click()
-        #thread.join(timeout=60)
-        time.sleep(1)
+        thread.join(timeout=60)
+
 
         # Check if an exception was set
         if self.exception_event.is_set():

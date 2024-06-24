@@ -194,7 +194,7 @@ class App:
 
         #Si el modelo está entre los modelos anuales
         if modelo in modelos["anual"]:
-            nombre_archivo = f"{nif} {modelo} {ejercicio[-2:]}.pdf"
+            nombre_archivo = f"{nif} {nombre} {modelo} {ejercicio[-2:]}.pdf"
 
         #Si el modelo e mensual
         elif modelo in modelos["mensual"]:
@@ -247,7 +247,7 @@ class App:
                     mes = mensual_texto[0][-1]
                 except:
                     mes = mensual_texto[-1][-1]
-            nombre_archivo = f"{nif} {modelo} {mes} {ejercicio[-2:]}.pdf"
+            nombre_archivo = f"{nif} {nombre} {modelo} {mes} {ejercicio[-2:]}.pdf"
 
         #Si el modelo es trimestral
         elif modelo in modelos["trimestral"]:
@@ -255,7 +255,7 @@ class App:
             if len(trimestral) > 0:
                 trimestre = trimestral[0].replace("TRIM", "").strip()
                 trimestre = f"{trimestre}º trimestre"
-                nombre_archivo = f"{nif} {modelo} {trimestre} {ejercicio[-2:]}.pdf"
+                nombre_archivo = f"{nif} {nombre} {modelo} {trimestre} {ejercicio[-2:]}.pdf"
             else:
                 raise Exception("No se localiza el trimestre")
 
@@ -316,20 +316,20 @@ class App:
             else:
                 raise NameError("No se localiza el Periodo en el documento")
 
-            nombre_archivo = f"{nif} {modelo} {periodo} {ejercicio[-2:]}.pdf"
+            nombre_archivo = f"{nif} {nombre} {modelo} {periodo} {ejercicio[-2:]}.pdf"
 
 
         else:
             raise NameError("El modelo no se encuentra en la lista de modelos")
 
 
-        folder_path = DOWNLOAD_FOLDER + f"\\{cod_cliente}/IMPUESTOS\\{ejercicio}"
+        folder_path = DOWNLOAD_FOLDER + f"\\{cod_cliente}\\IMPUESTOS\\{ejercicio}"
         #Folder(folder_path)
 
 
         file.rename(nombre_archivo)
         Folder(COMMON_FOLDER)
-        if not File(COMMON_FOLDER +"\\" + nombre_archivo).exists:
+        if not File(COMMON_FOLDER + nombre_archivo).exists:
             #file.move(folder_path)
             file.move(COMMON_FOLDER)
         #if not File(folder_path  +"\\" + nombre_archivo).exists:

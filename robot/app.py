@@ -178,7 +178,7 @@ class App:
         if not nif in pdf_text:
             raise Exception("El nif No coincide con el documento")
 
-        modelos = {"mensual": [ 111],
+        modelos = {"mensual": [111],
                    "mensual/trimestral":[115,123,303,349,216,309],
                    "trimestral": [130,110],
                    "anual": [190,140,180,184,200,220,390,347,232,296, 345]}

@@ -120,10 +120,10 @@ class Robot(Bot):
             if len(tramites) == 0:
                 message = "No hay tramites para el usuario"
                 raise BusinessException(self, message=message, next_action="set_transaction_status")
-            self.folder.empty()
+            self.folder.empty(allow_root=True)
             #Si
             if len(self.folder.file_list(".pdf")) > 0:
-                self.folder.empty()
+                self.folder.empty(allow_root=True)
                 time.sleep(30)
                 if len(self.folder.file_list(".pdf")) > 0:
                     raise BusinessException(self, message="Error al borrar documentos de la carpeta", next_action="retry")
@@ -196,7 +196,7 @@ class Robot(Bot):
             page.append([self.nif, self.name, impuesto[0], impuesto[1], impuesto[2]])
             self.wb.save(self.workbook_path)
             self.wb.close()
-            self.folder.empty()
+            self.folder.empty(allow_root=True)
             tramites.pop(0)
 
             archivo = impuesto[2]

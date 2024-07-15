@@ -31,5 +31,4 @@ class Nodes(Enum):
 
 class Conditions(Enum):
     has_data = lambda data: True if len(data) > 0 else False
-
     eval_documents = lambda data: data if data in [2, 3] else 1

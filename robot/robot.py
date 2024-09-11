@@ -42,6 +42,7 @@ class Robot(Bot):
         try:
             self.tempFolder = TEMP_FOLDER
             self.workbook_path = INPUT_FILE
+
             self.folder = Folder(self.tempFolder)
             self.folder.empty(allow_root=True)
             try:
@@ -255,4 +256,5 @@ class Robot(Bot):
         Este método cierra el Navegador web.
         """
         self.browser.close()
+        self.folder.remove(allow_root=True)
         self.log.trace(f"end")

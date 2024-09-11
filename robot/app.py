@@ -63,13 +63,13 @@ class App:
         self.browser.find_element("xpath", AS.INPUT_SELECTOR.value).send_keys(Keys.COMMAND + "a")
         self.browser.find_element("xpath", AS.INPUT_SELECTOR.value).clear()
         self.browser.find_element("xpath", AS.INPUT_SELECTOR.value).send_keys(nif)
+        self.browser.find_element("xpath", AS.SEARCH_BUTTON.value).click()
         CLIENT_SELECTOR = f"//span[contains(text(),'{nif}')]"
-
-        try:
-            self.browser.wait_for_element("xpath", CLIENT_SELECTOR, timeout=10)
-            self.browser.find_element("xpath", CLIENT_SELECTOR).click()
-            self.browser.wait_for_element_to_disappear("xpath", AS.LOADING_PAGE.value, timeout=60)
-        except:
+        time.sleep(10)
+        if self.browser.find_element("xpath", "//input[@id='form1:nombrePoderdante']").get_property("value") != "":
+            self.browser.find_element("xpath", AS.FILTER_SELECTOR.value).click()
+            self.browser.wait_for_element_to_disappear("xpath", AS.LOADING_PAGE.value, timeout=120)
+        else:
             return False
 
 
@@ -96,21 +96,30 @@ class App:
 
     def filter_data(self, start_date, end_date):
 
-        self.browser.wait_for_element_to_be_clickable("xpath", AS.CAMBIAR_BUSQUEDA.value, 30)
+
+        self.browser.wait_for_element_to_be_clickable("xpath", AS.CAMBIAR_BUSQUEDA.value, 120)
         self.browser.find_element('xpath', AS.CAMBIAR_BUSQUEDA.value).click()
-        self.browser.wait_for_element("xpath", AS.FECHA_DESDE.value, 30)
-        time.sleep(2)
-        self.browser.find_element("xpath", AS.FECHA_DESDE.value).send_keys(start_date)
+        self.browser.wait_for_element("xpath", AS.FECHA_DESDE.value, 120)
+        self.browser.find_element("xpath", AS.FECHA_DESDE.value).send_keys(
+            start_date)
+
 
         self.browser.find_element("xpath", AS.FECHA_HASTA.value).send_keys(
             end_date)
+
+        if self.browser.find_element("xpath", AS.FECHA_DESDE.value).get_property("value") != start_date or self.browser.find_element("xpath", AS.FECHA_HASTA.value).get_property("value") != end_date:
+            raise Exception("No se han filtrado bien bien las fechas")
+
         self.browser.find_element("xpath", AS.BUSCAR.value).click()
 
         self.browser.wait_for_element_to_disappear("xpath", AS.LOADING_PAGE.value, timeout=60)
         time.sleep(5)
-        tramites = int(self.browser.find_element('xpath', AS.EXPEDIENTES_ENCONTRADOS.value).text.split(" ")[0])
 
-        if tramites > 0:
+        if self.browser.element_exists('xpath', AS.EXPEDIENTES_ENCONTRADOS.value):
+            tramites = int(self.browser.find_element('xpath',"//*[contains(text(),'presentaciones encontradas')]").text.replace('presentaciones encontradas',"").strip())
+            #self.browser.find_elements('xpath', AS.TRAMITES.value)
+
+            #tramites = self.browser.find_elements('xpath', AS.TRAMITES.value)
             return [*range(tramites)]
         else:
             return []

@@ -116,9 +116,12 @@ class App:
         time.sleep(5)
 
         if self.browser.element_exists('xpath', AS.EXPEDIENTES_ENCONTRADOS.value):
-            tramites = int(self.browser.find_element('xpath',"//*[contains(text(),'presentaciones encontradas')]").text.replace('presentaciones encontradas',"").strip())
-            #self.browser.find_elements('xpath', AS.TRAMITES.value)
-
+            try:
+                tramites = int(self.browser.find_element('xpath',"//*[contains(text(),'presentaciones encontradas')]").text.replace('presentaciones encontradas',"").strip())
+                #self.browser.find_elements('xpath', AS.TRAMITES.value)
+            except:
+                tramites = 1
+            
             #tramites = self.browser.find_elements('xpath', AS.TRAMITES.value)
             return [*range(tramites)]
         else:

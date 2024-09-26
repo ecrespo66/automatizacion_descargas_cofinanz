@@ -193,13 +193,13 @@ class App:
         modelos = {"mensual": [111],
                    "mensual/trimestral":[115,123,303,349,216,309],
                    "trimestral": [130,110],
-                   "anual": [190,140,180,184,200,220,390,347,232,296, 345]}
+                   "anual": [190,193,140,180,184,200,220,390,347,232,296,203, 345]}
 
 
         #Buscamos en ejercicio en el documento
-        año = re.findall(r'(Ejercicio|período)([\s\S]+?)(202\d{1})', pdf_text)
+        año = re.findall(r'(Ejercicio|período|anual)[\s\S]+?(\b202\d{1})', pdf_text)
         if len(año) > 0:
-            ejercicio = año[0][-1]
+            ejercicio = año[-1][-1]
         else:
             ejercicio = re.findall(r"(20\d{2})", pdf_text)[0]
 
@@ -332,7 +332,7 @@ class App:
 
 
         else:
-            raise NameError("El modelo no se encuentra en la lista de modelos")
+            raise NameError(f"El modelo {modelo} no se encuentra en la lista.")
 
 
         folder_path = DOWNLOAD_FOLDER + f"\\{cod_cliente}\\IMPUESTOS\\{ejercicio}"

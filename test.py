@@ -1,5 +1,6 @@
 import re
 
+from files_and_folders.files import File
 from files_and_folders.folders import Folder
 from files_and_folders.pdfs import PDF
 
@@ -101,11 +102,11 @@ def save_file(file):
 
     elif modelo in modelos["mensual/trimestral"]:
         mensual = re.findall(
-            r"(>?Per[í|i]odo[\s\S]+?)(ENERO|FEBR.|MARZO|ABRIL|MAYO|JUN.|JUL.|AGO.|SET.|OCT.|NOV.|DIC.)", pdf_text)
+            r">?Per[í|i]odo[\s\S]+?(ENERO|FEBR.|MARZO|ABRIL|MAYO|JUN.|JUL.|AGO.|SET.|OCT.|NOV.|DIC.)\n", pdf_text)
 
-        mensual_num = re.findall(rf"(>?{ejercicio})\n(01|02|03|04|05|06|07|08|09|10|11|12)", pdf_text)
+        mensual_num = re.findall(rf">?{ejercicio}\n(01|02|03|04|05|06|07|08|09|10|11|12)", pdf_text)
         mensual_texto = re.findall(
-            r"(Periodo\s)(.?)(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)",
+            r"Periodo\s.?(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)",
             pdf_text, re.IGNORECASE)
         trimestral = re.findall(r'(TRIM\d{1})', pdf_text)
 
@@ -128,9 +129,9 @@ def save_file(file):
                 'DIC.': 'diciembre'
             }
             try:
-                periodo = month_list[mensual[0][-1]]
+                periodo = month_list[mensual[0]]
             except:
-                periodo = month_list[mensual[-1][-1]]
+                periodo = month_list[mensual[-1]]
         elif len(mensual_num) > 0:
             month_list = {
                 '01': 'enero',
@@ -146,18 +147,22 @@ def save_file(file):
                 '11': 'noviembre',
                 '12': 'diciembre'
             }
-            periodo = month_list[mensual_num[0][-1]]
+            periodo = month_list[mensual_num[0]]
         elif len(mensual_texto) > 0:
             try:
-                periodo = mensual_texto[0][-1]
+                periodo = mensual_texto[0]
             except:
-                periodo = mensual_texto[-1][-1]
+                periodo = mensual_texto[-1]
         else:
             raise NameError("No se localiza el Periodo en el documento")
-
+    re.findall(r"complementaria[\s\S]+?(✔|✖)[\s\S]+?sustitutiva", pdf_text)
         #nombre_archivo = f"{nif} {nombre} {modelo} {periodo} {ejercicio[-2:]}.pdf"
-
-
+    """
+    if len(re.findall(r"complementaria[\s\S]+?(✔|✖)[\s\S]+?sustitutiva", pdf_text)) > 0:
+        #nombre_archivo = nombre_archivo.replace(".pdf", "_complementaria.pdf")
+    elif len(re.findall(r"sustitutiva[\s\S]+?(✔|✖)", pdf_text)) > 0:
+        #nombre_archivo = nombre_archivo.replace(".pdf", "_sustitutiva.pdf")
+    """
     print(modelo, ejercicio, periodo, file.file_name)
     """
     folder_path = DOWNLOAD_FOLDER + f"\\{cod_cliente}\\IMPUESTOS\\{ejercicio}"
@@ -174,5 +179,35 @@ def save_file(file):
     return (modelo, periodo, file.path)
     """
 
-for file in Folder("C:\\Users\\Administrador\\Documents\\pruebas").file_list(".pdf"):
-    save_file(file)
+import fitz  # PyMuPDF
+
+# Abre el archivo PDF
+
+import fitz  # PyMuPDF
+
+import pdfplumber
+
+def extraer_texto_con_pdfplumber(pdf_path):
+    texto_completo = ""
+
+    with pdfplumber.open(pdf_path) as pdf:
+        for pagina in pdf.pages:
+            texto_completo += pagina.extract_text() + "\n"
+
+    return texto_completo
+
+# Especifica la ruta de tu archivo PDF
+ruta_pdf = "C:\\Users\\Administrador\\Documents\\complementarias_sustitutivas\\B95205472 MADERAS ZALLO, S.L. 190 23_sustitutiva.pdf"
+#texto_extraido = extraer_texto_con_pdfplumber(ruta_pdf)
+#print(texto_extraido)
+#re.findall(r"complementaria[\s\S]+?(✔|✖)[\s\S]+?sustitutiva", texto_extraido)
+# Especifica la ruta de tu archivo PDF
+
+for file in Folder("C:\\Users\\Administrador\\Documents\\complementarias_sustitutivas\\pruebas").file_list(".pdf"):
+    texto = extraer_texto_con_pdfplumber(file.path)
+    if len(re.findall(r"complementaria (✔|✖)", texto)) >0:
+        print(file.path, "complementaria", re.findall(r"complementaria (✔|✖)", texto)[0])
+    elif len(re.findall(r"sustitutiva (✔|✖)", texto)) > 0:
+        print(file.path, "sustitutiva", re.findall(r"sustitutiva (✔|✖)", texto)[0])
+
+

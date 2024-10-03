@@ -11,6 +11,7 @@ from selenium.webdriver import Keys, ActionChains
 
 from .constants import DOWNLOAD_FOLDER, COMMON_FOLDER
 from .selectors import AppSelectors as AS
+import pdfplumber
 
 
 class App:
@@ -18,6 +19,15 @@ class App:
         self.browser = browser
         self.exception_event = threading.Event()
         self.exception = None
+
+    def read_form(self,pdf_path):
+        texto_completo = ""
+
+        with pdfplumber.open(pdf_path) as pdf:
+            for pagina in pdf.pages:
+                texto_completo += pagina.extract_text() + "\n"
+
+        return texto_completo
 
 
     def load_certificate(self):
@@ -176,8 +186,7 @@ class App:
 
     def save_file(self, file, nombre, nif, cod_cliente):
 
-        pdf = PDF(file.path)
-        pdf_text = pdf.read_pdf()
+        pdf_text = self.read_form(file.path)
         periodo = ""
 
         #Buscamos en modelo en el documento
@@ -211,11 +220,11 @@ class App:
         #Si el modelo e mensual
         elif modelo in modelos["mensual"]:
             mensual = re.findall(
-                r"(>?Per[í|i]odo[\s\S]+?)(ENERO|FEBR.|MARZO|ABRIL|MAYO|JUN.|JUL.|AGO.|SET.|OCT.|NOV.|DIC.)", pdf_text)
+                r">?Per[í|i]odo[\s\S]+?(ENERO|FEBR.|MARZO|ABRIL|MAYO|JUN.|JUL.|AGO.|SET.|OCT.|NOV.|DIC.)\n", pdf_text)
 
-            mensual_num = re.findall(rf"(>?{ejercicio})\n(01|02|03|04|05|06|07|08|09|10|11|12)", pdf_text)
+            mensual_num = re.findall(rf">?{ejercicio}\n(01|02|03|04|05|06|07|08|09|10|11|12)", pdf_text)
             mensual_texto = re.findall(
-                r"(Periodo\s)(.?)(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)",
+                r">?Per[í|i]odo[\s\S]+?(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)",
                 pdf_text, re.IGNORECASE)
 
             if len(mensual) > 0:
@@ -234,9 +243,9 @@ class App:
                 'DIC.': 'diciembre'
             }
                 try:
-                    mes = month_list[mensual[0][-1]]
+                    mes = month_list[mensual[0]]
                 except:
-                    mes = month_list[mensual[-1][-1]]
+                    mes = month_list[mensual[-1]]
             elif len(mensual_num) > 0:
                 month_list = {
                     '01': 'enero',
@@ -252,13 +261,13 @@ class App:
                     '11': 'noviembre',
                     '12': 'diciembre'
                 }
-                mes = month_list[mensual_num[0][-1]]
+                mes = month_list[mensual_num[0]]
 
             elif len(mensual_texto) > 0:
                 try:
-                    mes = mensual_texto[0][-1]
+                    mes = mensual_texto[0]
                 except:
-                    mes = mensual_texto[-1][-1]
+                    mes = mensual_texto[-1]
             nombre_archivo = f"{nif} {nombre} {modelo} {mes} {ejercicio[-2:]}.pdf"
 
         #Si el modelo es trimestral
@@ -273,11 +282,11 @@ class App:
 
         elif modelo in modelos["mensual/trimestral"]:
             mensual = re.findall(
-                r"(>?Per[í|i]odo[\s\S]+?)(ENERO|FEBR.|MARZO|ABRIL|MAYO|JUN.|JUL.|AGO.|SET.|OCT.|NOV.|DIC.)", pdf_text)
+                r">?Per[í|i]odo[\s\S]+?(ENERO|FEBR.|MARZO|ABRIL|MAYO|JUN.|JUL.|AGO.|SET.|OCT.|NOV.|DIC.)\W", pdf_text)
 
-            mensual_num = re.findall(rf"(>?{ejercicio})\n(01|02|03|04|05|06|07|08|09|10|11|12)", pdf_text)
+            mensual_num = re.findall(rf">?{ejercicio}\n(01|02|03|04|05|06|07|08|09|10|11|12)", pdf_text)
             mensual_texto = re.findall(
-                r"(Periodo\s)(.?)(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)",
+                r"Per[í|i]odo[\s\S]+?(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)",
                 pdf_text, re.IGNORECASE)
             trimestral = re.findall(r'(TRIM\d{1})', pdf_text)
 
@@ -301,9 +310,9 @@ class App:
                 'DIC.': 'diciembre'
             }
                 try:
-                    periodo = month_list[mensual[0][-1]]
+                    periodo = month_list[mensual[0]]
                 except:
-                    periodo = month_list[mensual[-1][-1]]
+                    periodo = month_list[mensual[-1]]
             elif len(mensual_num) > 0:
                 month_list = {
                     '01': 'enero',
@@ -319,12 +328,12 @@ class App:
                     '11': 'noviembre',
                     '12': 'diciembre'
                 }
-                periodo = month_list[mensual_num[0][-1]]
+                periodo = month_list[mensual_num[0]]
             elif len(mensual_texto) > 0:
                 try:
-                    periodo = mensual_texto[0][-1]
+                    periodo = mensual_texto[0]
                 except:
-                    periodo = mensual_texto[-1][-1]
+                    periodo = mensual_texto[-1]
             else:
                 raise NameError("No se localiza el Periodo en el documento")
 
@@ -338,6 +347,13 @@ class App:
         folder_path = DOWNLOAD_FOLDER + f"\\{cod_cliente}\\IMPUESTOS\\{ejercicio}"
         #Folder(folder_path)
 
+        complementaria = re.findall(r"complementaria (✔|✖)", pdf_text)
+        sustitutiva = re.findall(r"sustitutiva (✔|✖)", pdf_text)
+
+        if len(complementaria) > 0:
+            nombre_archivo = nombre_archivo.replace(".pdf", "_complementaria.pdf")
+        elif len(sustitutiva)>0:
+            nombre_archivo = nombre_archivo.replace(".pdf", "_sustitutiva.pdf")
 
         file.rename(nombre_archivo)
         Folder(COMMON_FOLDER)

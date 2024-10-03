@@ -46,7 +46,7 @@ class Robot(Bot):
             self.folder = Folder(self.tempFolder)
             self.folder.empty(allow_root=True)
             try:
-                self.start_date = datetime.strptime(self.parameters.get('date-from'), '%Y-%m-%d').strftime('%d/%m/%Y')
+                self.start_date =datetime.strptime(self.parameters.get('date-from'), '%Y-%m-%d').strftime('%d/%m/%Y')
                 self.end_date = datetime.strptime(self.parameters.get('date-to'),  '%Y-%m-%d').strftime('%d/%m/%Y')
             except:
                 self.start_date = datetime.now().strftime('%d/%m/%Y')

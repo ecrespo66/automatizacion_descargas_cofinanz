@@ -78,6 +78,12 @@ class SystemException(RobotException):
                     pass
                 self.robot.app.login()
                 self.go_to_node("get_client_data", "Error al obtener los documentos del cliente")
+        if self.next_action == "retry_download":
+            try:
+                self.retry(3)
+            except:
+                self.robot.tramites.pop(0)
+                self.skip()
         elif self.next_action == "restart":
             self.restart(3)
         elif self.next_action == "skip":

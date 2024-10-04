@@ -5,9 +5,18 @@ from files_and_folders.folders import Folder
 from files_and_folders.pdfs import PDF
 
 
+def extraer_texto_con_pdfplumber(pdf_path):
+    texto_completo = ""
+
+    with pdfplumber.open(pdf_path) as pdf:
+        for pagina in pdf.pages:
+            texto_completo += pagina.extract_text() + "\n"
+
+    return texto_completo
+
 def save_file(file):
-    pdf = PDF(file.path)
-    pdf_text = pdf.read_pdf()
+    #pdf = PDF(file.path)
+    pdf_text = extraer_texto_con_pdfplumber(file.path)
     periodo = ""
 
     # Buscamos en modelo en el documento
@@ -202,12 +211,13 @@ ruta_pdf = "C:\\Users\\Administrador\\Documents\\complementarias_sustitutivas\\B
 #print(texto_extraido)
 #re.findall(r"complementaria[\s\S]+?(✔|✖)[\s\S]+?sustitutiva", texto_extraido)
 # Especifica la ruta de tu archivo PDF
+for file in Folder("M:\PRUEBAS_2023\Incorrecta").file_list(".pdf"):
 
-for file in Folder("C:\\Users\\Administrador\\Documents\\complementarias_sustitutivas\\pruebas").file_list(".pdf"):
-    texto = extraer_texto_con_pdfplumber(file.path)
-    if len(re.findall(r"complementaria (✔|✖)", texto)) >0:
-        print(file.path, "complementaria", re.findall(r"complementaria (✔|✖)", texto)[0])
-    elif len(re.findall(r"sustitutiva (✔|✖)", texto)) > 0:
-        print(file.path, "sustitutiva", re.findall(r"sustitutiva (✔|✖)", texto)[0])
+    save_file(file)
+    """texto = extraer_texto_con_pdfplumber(file.path)
+    if len(re.findall(r"(complementaria|01) (✔|✖)", texto)) >0:
+        print(file.path, "complementaria", re.findall(r"(complementaria|01) (✔|✖)", texto))
+    elif len(re.findall(r"(sustitutiva|01) (✔|✖)", texto)) > 0:
+        print(file.path, "sustitutiva", re.findall(r"(sustitutiva|01) (✔|✖)", texto))"""
 
 

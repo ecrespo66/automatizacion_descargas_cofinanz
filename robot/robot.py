@@ -17,7 +17,7 @@ class Robot(Bot):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs, disabled=False)
+        super().__init__(**kwargs, disabled=True)
         self.transaction_number = None
         self.data = None
         self.app = None
@@ -49,8 +49,8 @@ class Robot(Bot):
                 self.start_date =datetime.strptime(self.parameters.get('date-from'), '%Y-%m-%d').strftime('%d/%m/%Y')
                 self.end_date = datetime.strptime(self.parameters.get('date-to'),  '%Y-%m-%d').strftime('%d/%m/%Y')
             except:
-                self.start_date = datetime.now().strftime('%d/%m/%Y')
-                self.end_date = datetime.now().strftime('%d/%m/%Y')
+                self.start_date = "01/01/2023"#datetime.now().strftime('%d/%m/%Y')
+                self.end_date = "01/01/2024"#datetime.now().strftime('%d/%m/%Y')
             self.log.trace(f"Se van a obtener los impuestos desde {self.start_date} hasta {self.end_date}")
             self.browser = ChromeBrowser(undetectable=True)
             self.browser.options.page_load_strategy = "normal"
@@ -172,8 +172,8 @@ class Robot(Bot):
             2. Sistema: No se ha descargadi el documento -> next_action: "rety"
         """
         try:
-            tramites = args[0]
-            tramite = tramites[0]
+            self.tramites = args[0]
+            tramite = self.tramites[0]
 
             self.app.descargar_documentos(tramite)
             if len(self.folder.file_list(".pdf")) == 0:
@@ -198,11 +198,11 @@ class Robot(Bot):
             self.wb.save(self.workbook_path)
             self.wb.close()
             self.folder.empty(allow_root=True)
-            tramites.pop(0)
+            self.tramites.pop(0)
 
             archivo = impuesto[2]
             self.downloaded_documents.append(archivo)
-            return tramites
+            return self.tramites
 
         except BusinessException as BE:
             try:
@@ -210,7 +210,7 @@ class Robot(Bot):
             except:
                 raise SystemException(self, message=e, next_action="retry")
             self.log.business_exception(BE.message)
-            tramites.pop(0)
+            self.tramites.pop(0)
             raise BE
 
         except Exception as e:
@@ -218,8 +218,8 @@ class Robot(Bot):
             try:
                 self.folder.empty(allow_root=True)
             except:
-                raise SystemException(self, message=e, next_action="retry")
-            raise SystemException(self, message=e, next_action="retry")
+                raise SystemException(self, message=e, next_action="retry_download")
+            raise SystemException(self, message=e, next_action="retry_download")
 
     @RobotFlow(Nodes.OperationNode, children="get_client_data")
     def set_transaction_status(self, *args):

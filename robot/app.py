@@ -347,8 +347,8 @@ class App:
         folder_path = DOWNLOAD_FOLDER + f"\\{cod_cliente}\\IMPUESTOS\\{ejercicio}"
         #Folder(folder_path)
 
-        complementaria = re.findall(r"complementaria (✔|✖)", pdf_text)
-        sustitutiva = re.findall(r"sustitutiva (✔|✖)", pdf_text)
+        complementaria = re.findall(r"(complementaria|01) (✔|✖)", pdf_text)
+        sustitutiva = re.findall(r"(sustitutiva|01) (✔|✖)", pdf_text)
 
         if len(complementaria) > 0:
             nombre_archivo = nombre_archivo.replace(".pdf", "_complementaria.pdf")

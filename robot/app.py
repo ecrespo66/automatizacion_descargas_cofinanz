@@ -345,7 +345,7 @@ class App:
 
 
         folder_path = DOWNLOAD_FOLDER + f"\\{cod_cliente}\\IMPUESTOS\\{ejercicio}"
-        #Folder(folder_path)
+        folder = Folder(folder_path)
 
         complementaria = re.findall(r"(complementaria|01) (✔|✖)", pdf_text)
         sustitutiva = re.findall(r"(sustitutiva|01) (✔|✖)", pdf_text)
@@ -358,9 +358,9 @@ class App:
         file.rename(nombre_archivo)
         Folder(COMMON_FOLDER)
         if not File(COMMON_FOLDER + nombre_archivo).exists:
-            #file.move(folder_path)
             file.move(COMMON_FOLDER)
-        #if not File(folder_path  +"\\" + nombre_archivo).exists:
-        #    #file.move(folder_path)
+        if not File(folder_path  +"\\" + nombre_archivo).exists:
+            file.copy(new_location= folder_path)
         #    print(folder_path  +"\\" + nombre_archivo)
+        file.path = folder_path + "\\" +  nombre_archivo
         return (modelo, periodo, file.path)

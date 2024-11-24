@@ -7,3 +7,4 @@ PyAutoGUI
 opencv_python
 pywinauto
 ibott-mail==1.0.6
+pdfplumber

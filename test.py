@@ -205,19 +205,6 @@ def extraer_texto_con_pdfplumber(pdf_path):
 
     return texto_completo
 
-# Especifica la ruta de tu archivo PDF
-ruta_pdf = "C:\\Users\\Administrador\\Documents\\complementarias_sustitutivas\\B95205472 MADERAS ZALLO, S.L. 190 23_sustitutiva.pdf"
-#texto_extraido = extraer_texto_con_pdfplumber(ruta_pdf)
-#print(texto_extraido)
-#re.findall(r"complementaria[\s\S]+?(✔|✖)[\s\S]+?sustitutiva", texto_extraido)
-# Especifica la ruta de tu archivo PDF
+
 for file in Folder("M:\PRUEBAS_2023\Incorrecta").file_list(".pdf"):
-
     save_file(file)
-    """texto = extraer_texto_con_pdfplumber(file.path)
-    if len(re.findall(r"(complementaria|01) (✔|✖)", texto)) >0:
-        print(file.path, "complementaria", re.findall(r"(complementaria|01) (✔|✖)", texto))
-    elif len(re.findall(r"(sustitutiva|01) (✔|✖)", texto)) > 0:
-        print(file.path, "sustitutiva", re.findall(r"(sustitutiva|01) (✔|✖)", texto))"""
-
-

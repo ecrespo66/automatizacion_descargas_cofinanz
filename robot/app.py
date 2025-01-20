@@ -206,6 +206,7 @@ class App:
 
 
         #Buscamos en ejercicio en el documento
+        ejercicio = None
         año = re.findall(r'(Ejercicio|período|anual)[\s\S]+?(\b202\d{1})', pdf_text)
         if len(año) > 0:
             for a in año:

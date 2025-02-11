@@ -36,7 +36,6 @@ def save_file(file):
     año = re.findall(r'(Ejercicio|período|anual)\s+\D*\b(\b202\d{1})', pdf_text)
     if len(año) > 0:
         ejercicio = año[-1][-1]
-
     else:
         re.findall(r'(\d{2}/\d{2}/\d{4})([\s\S]+?)(\d{2}/\d{2}/\d{4})', pdf_text)[-1]
         ejercicio = re.findall(r"(20\d{2})", pdf_text)[0]

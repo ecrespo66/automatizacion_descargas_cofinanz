@@ -204,10 +204,9 @@ class App:
                    "trimestral": [130,110],
                    "anual": [190,193,140,180,184,200,220,390,347,232,296,203, 345]}
 
-
         #Buscamos en ejercicio en el documento
         ejercicio = None
-        año = re.findall(r'(Ejercicio|período|anual)[\s\S]+?(\b202\d{1})', pdf_text)
+        año = re.findall(r'(Ejercicio|período|anual)\s+\D*\b(\b202\d{1})', pdf_text)
         if len(año) > 0:
             for a in año:
                 if a[0] == "Ejercicio":

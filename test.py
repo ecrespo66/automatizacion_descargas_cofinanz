@@ -33,7 +33,7 @@ def save_file(file):
                "anual": [190, 140, 180, 184, 200, 220, 390, 347, 232, 296, 345]}
 
     # Buscamos en ejercicio en el documento
-    año = re.findall(r'(Ejercicio|período|anual)[\s\S]+?(\b202\d{1})', pdf_text)
+    año = re.findall(r'(Ejercicio|período|anual)\s+\D*\b(\b202\d{1})', pdf_text)
     if len(año) > 0:
         ejercicio = año[-1][-1]
 
@@ -206,5 +206,8 @@ def extraer_texto_con_pdfplumber(pdf_path):
     return texto_completo
 
 
-for file in Folder("M:\PRUEBAS_2023\Incorrecta").file_list(".pdf"):
-    save_file(file)
+#for file in Folder("M:\PRUEBAS_2023\Incorrecta").file_list(".pdf"):
+#    save_file(file)
+
+file = File("/Users/enriquecrespodebenito/Desktop/B06993562 NIRE REFORMAK, S.L. 347 25.pdf")
+save_file(file)

@@ -190,7 +190,7 @@ class App:
         periodo = ""
 
         #Buscamos en modelo en el documento
-        modelo = re.findall(r"Modelo (\d{3})", pdf_text)
+        modelo = re.findall(r"Modelo (\d{3})|(IMPUESTO SOBRE SOCIEDADES)", pdf_text)
         if len(modelo) >0:
             modelo = int(modelo[0])
         else:
@@ -202,7 +202,7 @@ class App:
         modelos = {"mensual": [111],
                    "mensual/trimestral":[115,123,303,349,216,309],
                    "trimestral": [130,110],
-                   "anual": [190,193,140,180,184,200,220,390,347,232,296,203, 345]}
+                   "anual": [190,193,140,180,184,200,220,390,347,232,296,203, 345, "IMPUESTO SOBRE SOCIEDADES"]}
 
         #Buscamos en ejercicio en el documento
         ejercicio = None
@@ -368,3 +368,7 @@ class App:
         #    print(folder_path  +"\\" + nombre_archivo)
         file.path = folder_path + "\\" +  nombre_archivo
         return (modelo, periodo, file.path)
+
+
+
+i

@@ -1,5 +1,6 @@
 import re
 
+import pdfplumber
 from files_and_folders.files import File
 from files_and_folders.folders import Folder
 from files_and_folders.pdfs import PDF
@@ -20,9 +21,12 @@ def save_file(file):
     periodo = ""
 
     # Buscamos en modelo en el documento
-    modelo = re.findall(r"Modelo (\d{3})", pdf_text)
+    modelo = re.findall(r"Modelo (\d{3})|(IMPUESTO SOBRE SOCIEDADES)", pdf_text)
     if len(modelo) > 0:
-        modelo = int(modelo[0])
+        if modelo[0][1] != "IMPUESTO SOBRE SOCIEDADES":
+            modelo = int(modelo[0])
+        else:
+            modelo= "IMPUESTO SOBRE SOCIEDADES"
     else:
         raise NameError("No se localiza el modelo en el documento")
 
@@ -30,7 +34,7 @@ def save_file(file):
     modelos = {"mensual": [111],
                "mensual/trimestral": [115, 123, 303, 349, 216, 309],
                "trimestral": [130, 110],
-               "anual": [190, 140, 180, 184, 200, 220, 390, 347, 232, 296, 345]}
+               "anual": [190, 140, 180, 184, 200, 220, 390, 347, 232, 296, 345 ,"IMPUESTO SOBRE SOCIEDADES"]}
 
     # Buscamos en ejercicio en el documento
     año = re.findall(r'(Ejercicio|período|anual)\s+\D*\b(\b202\d{1})', pdf_text)
@@ -165,35 +169,9 @@ def save_file(file):
             raise NameError("No se localiza el Periodo en el documento")
     re.findall(r"complementaria[\s\S]+?(✔|✖)[\s\S]+?sustitutiva", pdf_text)
         #nombre_archivo = f"{nif} {nombre} {modelo} {periodo} {ejercicio[-2:]}.pdf"
-    """
-    if len(re.findall(r"complementaria[\s\S]+?(✔|✖)[\s\S]+?sustitutiva", pdf_text)) > 0:
-        #nombre_archivo = nombre_archivo.replace(".pdf", "_complementaria.pdf")
-    elif len(re.findall(r"sustitutiva[\s\S]+?(✔|✖)", pdf_text)) > 0:
-        #nombre_archivo = nombre_archivo.replace(".pdf", "_sustitutiva.pdf")
-    """
+
     print(modelo, ejercicio, periodo, file.file_name)
-    """
-    folder_path = DOWNLOAD_FOLDER + f"\\{cod_cliente}\\IMPUESTOS\\{ejercicio}"
-    # Folder(folder_path)
 
-    file.rename(nombre_archivo)
-    Folder(COMMON_FOLDER)
-    if not File(COMMON_FOLDER + nombre_archivo).exists:
-        # file.move(folder_path)
-        file.move(COMMON_FOLDER)
-    # if not File(folder_path  +"\\" + nombre_archivo).exists:
-    #    #file.move(folder_path)
-    #    print(folder_path  +"\\" + nombre_archivo)
-    return (modelo, periodo, file.path)
-    """
-
-import fitz  # PyMuPDF
-
-# Abre el archivo PDF
-
-import fitz  # PyMuPDF
-
-import pdfplumber
 
 def extraer_texto_con_pdfplumber(pdf_path):
     texto_completo = ""
@@ -208,5 +186,5 @@ def extraer_texto_con_pdfplumber(pdf_path):
 #for file in Folder("M:\PRUEBAS_2023\Incorrecta").file_list(".pdf"):
 #    save_file(file)
 
-file = File("/Users/enriquecrespodebenito/Desktop/B06993562 NIRE REFORMAK, S.L. 347 25.pdf")
+file = File("/Users/enriquecrespodebenito/Downloads/B95218780_JUSTIFICANTE_10555769_signed.pdf")
 save_file(file)

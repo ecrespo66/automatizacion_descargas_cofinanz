@@ -17,7 +17,7 @@ class Robot(Bot):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs, disabled=False)
+        super().__init__(**kwargs, disabled=True)
         self.transaction_number = None
         self.data = None
         self.app = None
@@ -49,7 +49,7 @@ class Robot(Bot):
                 self.start_date =datetime.strptime(self.parameters.get('date-from'), '%Y-%m-%d').strftime('%d/%m/%Y')
                 self.end_date = datetime.strptime(self.parameters.get('date-to'),  '%Y-%m-%d').strftime('%d/%m/%Y')
             except:
-                self.start_date = datetime.now().strftime('%d/%m/%Y')
+                self.start_date = "01/07/2025" #datetime.now().strftime('%d/%m/%Y')
                 self.end_date = datetime.now().strftime('%d/%m/%Y')
             self.log.trace(f"Se van a obtener los impuestos desde {self.start_date} hasta {self.end_date}")
             self.browser = ChromeBrowser(undetectable=True)
@@ -69,6 +69,9 @@ class Robot(Bot):
             self.data = pd.read_excel(self.workbook_path)
             self.transaction_number = 0
             self.wb = openpyxl.load_workbook(self.workbook_path)
+            self.wb.close()
+
+
         except Exception as e:
             self.browser.close()
             self.log.system_exception(e)
@@ -223,32 +226,37 @@ class Robot(Bot):
 
     @RobotFlow(Nodes.OperationNode, children="get_client_data")
     def set_transaction_status(self, *args):
-        # Remove Processed Item
-        if len(args[0]) > 0:
-            result = args[0][0]
-        else:
-            result = "OK"
-            self.log.trace(result)
-            # Selecciona la hoja en la que quieres buscar y actualizar
-        hoja = self.wb['CLIENTES']
-        # Dato que estás buscando
-        dato_a_buscar = self.nif
-        # Busca el dato en la columna A y obtén la fila
-        fila = None
-        for fila_actual in range(1, hoja.max_row + 1):
-            if hoja.cell(row=fila_actual, column=1).value == dato_a_buscar:
-                fila = fila_actual
-                break
-        # Si se encuentra el dato, actualiza la celda correspondiente en la columna D
-        if fila is not None:
-            hoja.cell(row=fila, column=7).value = result
-            hoja.cell(row=fila, column=8).value = datetime.today().strftime("%d-%m-%y")
-        # Guarda los cambios en el archivo
-        self.wb.save(INPUT_FILE)
-        self.wb.close()
+        try:
+            # Remove Processed Item
+            if len(args[0]) > 0:
+                result = args[0][0]
+            else:
+                result = "OK"
+                self.log.trace(result)
+                # Selecciona la hoja en la que quieres buscar y actualizar
+            hoja = self.wb['CLIENTES']
+            # Dato que estás buscando
+            dato_a_buscar = self.nif
+            # Busca el dato en la columna A y obtén la fila
+            fila = None
+            for fila_actual in range(1, hoja.max_row + 1):
+                if hoja.cell(row=fila_actual, column=1).value == dato_a_buscar:
+                    fila = fila_actual
+                    break
+            # Si se encuentra el dato, actualiza la celda correspondiente en la columna D
+            if fila is not None:
+                hoja.cell(row=fila, column=7).value = result
+                hoja.cell(row=fila, column=8).value = datetime.today().strftime("%d-%m-%y")
+            # Guarda los cambios en el archivo
+            self.wb.save(INPUT_FILE)
+            self.wb.close()
 
-        self.data = self.data.drop(0)
-        self.data.reset_index(drop=True, inplace=True)
+            self.data = self.data.drop(0)
+            self.data.reset_index(drop=True, inplace=True)
+        except Exception as e:
+            self.wb.close()
+            raise SystemException(self, message=e, next_action="retry")
+
 
     @RobotFlow(node=Nodes.EndNode)
     def end(self, *args):

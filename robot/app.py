@@ -193,7 +193,7 @@ class App:
         modelo = re.findall(r"Modelo (\d{3})|(IMPUESTO SOBRE SOCIEDADES)", pdf_text)
         if len(modelo) >0:
             if modelo[0][1]!="IMPUESTO SOBRE SOCIEDADES":
-                modelo = int(modelo[0])
+                modelo = int(modelo[0][0])
             else:
                 modelo = "IMPUESTO SOBRE SOCIEDADES"
         else:

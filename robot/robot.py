@@ -49,7 +49,7 @@ class Robot(Bot):
                 self.start_date =datetime.strptime(self.parameters.get('date-from'), '%Y-%m-%d').strftime('%d/%m/%Y')
                 self.end_date = datetime.strptime(self.parameters.get('date-to'),  '%Y-%m-%d').strftime('%d/%m/%Y')
             except:
-                self.start_date = datetime.now().strftime('%d/%m/%Y')
+                self.start_date =datetime.now().strftime('%d/%m/%Y')
                 self.end_date = datetime.now().strftime('%d/%m/%Y')
             self.log.trace(f"Se van a obtener los impuestos desde {self.start_date} hasta {self.end_date}")
             self.browser = ChromeBrowser(undetectable=True)
